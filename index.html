@@ -82,6 +82,18 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 .clk{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;padding:4px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}.clk b{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:22px;font-weight:600;letter-spacing:.5px;font-variant-numeric:tabular-nums}.clk span{font-size:12px;color:var(--ink2)}
 .cctv{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.cc{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface);display:flex;flex-direction:column;gap:6px}.cch{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.ccd{font-size:13.5px;color:var(--ink2);line-height:1.55}.ccl{display:flex;flex-direction:column;gap:2px;font-size:14px}.ccu{margin:0;padding-left:18px;font-size:14px;line-height:1.7}.cc a{color:var(--water)}.cc .pill{font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap}.p-ok{background:var(--okbg);color:var(--ok)}.p-watch{background:var(--watchbg);color:var(--watch)}
 .mapview .wrap>*:not(#flPanel):not(#mvBar){display:none!important}.mapview #flTabs,.mapview #flCtl,.mapview #flShow,.mapview #flObsM,.mapview #flNow{display:none!important}.mapview .wrap{padding-block:10px 30px;gap:10px}.mapview #mvBar{display:flex!important}
+#cbBtn{position:fixed;right:18px;bottom:18px;z-index:900;border:0;border-radius:999px;padding:12px 18px;background:var(--water);color:#fff;font:600 15px var(--sans);box-shadow:0 6px 20px rgba(0,0,0,.3);cursor:pointer}
+#cbBox{position:fixed;right:18px;bottom:76px;z-index:901;width:min(380px,calc(100vw - 24px));height:min(560px,calc(100vh - 110px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden}
+#cbBox.on{display:flex}#cbHd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:600}
+#cbHd button{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer}
+#cbLog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.cbm{max-width:88%;padding:8px 12px;border-radius:12px;white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.55}
+.cbm.u{align-self:flex-end;background:var(--water);color:#fff;border-bottom-right-radius:4px}.cbm.b{align-self:flex-start;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-bottom-left-radius:4px}
+.cbm a{color:var(--water)}.cbm.u a{color:#fff}
+#cbQ{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 8px}#cbQ button{border:1px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:999px;padding:4px 10px;font:13px var(--sans);cursor:pointer}
+#cbF{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}#cbF input{flex:1;min-width:0;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:10px;padding:9px 12px;font:15px var(--sans)}
+#cbF button{border:0;background:var(--water);color:#fff;border-radius:10px;padding:0 14px;font:600 14px var(--sans);cursor:pointer}#cbF button:disabled{opacity:.5}
+.mapview #cbBtn{bottom:12px}
 </style>
 </head>
 <body>
@@ -828,5 +840,29 @@ sat();setInterval(sat,5*60000);
 })();
 </script>
 <script>(function(){const b=document.getElementById('themeBtn');if(!b)return;const R=document.documentElement;const set=t=>{R.setAttribute('data-theme',t);b.textContent=t==='dark'?'☀ โหมดสว่าง':'☾ โหมดมืด';try{localStorage.setItem('pn-theme',t)}catch(e){}};b.textContent=R.getAttribute('data-theme')==='dark'?'☀ โหมดสว่าง':'☾ โหมดมืด';b.addEventListener('click',()=>set(R.getAttribute('data-theme')==='dark'?'light':'dark'))})();</script>
+<button id="cbBtn" type="button" aria-label="แชตกับน้องหยดน้ำ">💧 ถามน้องหยดน้ำ</button>
+<div id="cbBox" role="dialog" aria-label="แชตกับน้องหยดน้ำ"><div id="cbHd"><span>💧 น้องหยดน้ำ · ผู้ช่วย AI</span><button type="button" id="cbX" aria-label="ปิด">×</button></div>
+<div id="cbLog" aria-live="polite"></div>
+<div id="cbQ"><button type="button">สถานการณ์</button><button type="button">ระดับน้ำ</button><button type="button">อ่างเก็บน้ำ</button><button type="button">ฝน</button><button type="button">น้ำเท่าไรถึงท่วม</button></div>
+<form id="cbF"><input id="cbI" maxlength="500" placeholder="พิมพ์คำถามเรื่องน้ำ ฝน น้ำท่วม…" autocomplete="off"><button type="submit">ส่ง</button></form></div>
+<script>(function(){
+const B=document.getElementById('cbBtn'),X=document.getElementById('cbBox'),LG=document.getElementById('cbLog'),F=document.getElementById('cbF'),I=document.getElementById('cbI');
+const remote=/github\.io$/.test(location.hostname)||location.protocol==='file:';const SITE='http://oobnetiot.mooo.com:8080/';
+let sid='';try{sid=localStorage.getItem('pn-chat-sid')||'';if(!sid){sid=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('pn-chat-sid',sid)}}catch(e){sid=Math.random().toString(36).slice(2)}
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=t=>esc(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+const add=(t,who)=>{const d=document.createElement('div');d.className='cbm '+who;d.innerHTML=fmt(t);LG.appendChild(d);LG.scrollTop=LG.scrollHeight;return d};
+let busy=false,greeted=false;
+async function ask(q){q=(q||'').trim();if(!q||busy)return;add(q,'u');I.value='';
+ if(remote){add('แชตกับน้องหยดน้ำใช้ได้บนเว็บหลักของศูนย์ค่ะ เปิดที่ '+SITE+' หรือถามผ่าน LINE OA ของศูนย์ได้เลยค่ะ','b');return}
+ busy=true;F.querySelector('button').disabled=true;const w=add('น้องหยดน้ำกำลังคิด…','b');
+ try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);const r=await fetch('api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,sid}),signal:ctl.signal});clearTimeout(tm);const j=await r.json();w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้')}
+ catch(e){w.innerHTML=fmt('ขออภัยค่ะ เชื่อมต่อไม่ได้ ลองใหม่อีกครั้งนะคะ')}
+ finally{busy=false;F.querySelector('button').disabled=false;LG.scrollTop=LG.scrollHeight}}
+B.onclick=()=>{X.classList.toggle('on');if(X.classList.contains('on')){if(!greeted){greeted=true;add('สวัสดีค่ะ 💧 น้องหยดน้ำจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคมค่ะ ถามเรื่องน้ำ ฝน น้ำท่วม หรือกดปุ่มด้านล่างได้เลยค่ะ\n(ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784 ทันที)','b')}setTimeout(()=>I.focus(),50)}};
+document.getElementById('cbX').onclick=()=>X.classList.remove('on');
+F.onsubmit=e=>{e.preventDefault();ask(I.value)};
+document.querySelectorAll('#cbQ button').forEach(b=>b.onclick=()=>ask(b.textContent));
+})();</script>
 </body>
 </html>
