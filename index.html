@@ -224,6 +224,8 @@ function renderTown(){if(!$('twPanel')||!D)return;const hr=D.hr||[],now=Date.now
  const Qt=Math.min(0.45*qB,45);const DSx=drainSlow();const backA=DSx.slow,backB=DSx.slow;
  const R=[{n:'สะพานบ้านช้าง',d:'ลำน้ำจากบ้านบึงเข้าเมือง → คลองเมือง',A:1.0,q0:0.6*Qt,cap:27,bk:backA},{n:'วัดเกาะแก้ว–ตลาดเก่า',d:'สายตะวันออก ผ่านวัดเกาะแก้ว → บรรจบคลองเมือง',A:0.8,q0:0.4*Qt,cap:18,bk:backA},{n:'คลองเมือง ก่อนลงคลองหลวง',d:'รวมสองสาย ไหลขึ้นเหนือ → คลองหลวง',A:2.4,q0:Qt,cap:45,bk:backA},{n:'ห้วยเกวียน (คลองเลี่ยงเมือง)',d:'น้ำบ้านบึงส่วนที่เหลือ ไปทางตะวันตก → ลำน้ำบ้านบึงช่วงท้าย',A:2.2,q0:Math.max(qB-Qt,0),cap:0,bk:backB},{n:'สะพานหน้าอำเภอ',d:'คลองเมือง หน้าที่ว่าการอำเภอพนัสนิคม (ท้ายสะพานบ้านช้าง ~1 กม.)',A:1.3,q0:0.6*Qt,cap:27,bk:backA}];
  const rows=R.map(r=>{const q=r.q0+loc(r.A);const qp=r.q0+pk(r.A,imax);const q10=r.q0+pk(r.A,10);const pct=r.cap?q/r.cap*100:0;const lv=pct>=100?'crit':pct>=80?'warn':r.bk?'watch':'ok';const st=pct>=100?'ล้นตลิ่ง':pct>=80?'ใกล้เต็มตลิ่ง':r.bk?'ระบายช้า (ปลายทางสูง)':'ปกติ';return {...r,q,qp,q10,pct,lv,st}});
+ const CO=(typeof CANAL!=='undefined'&&CANAL&&CANAL.t&&(Date.now()-new Date(CANAL.t))/36e5<=(CANAL.ttl||24))?CANAL:null;
+ if(CO){const fb=(CO.lo+CO.hi)/2;const p=Math.min(100,Math.pow(Math.max(0,2.5-fb)/2.5,5/3)*100);[0,1,2,4].forEach(i=>{const r=rows[i];if(!r)return;r.q=r.cap*p/100;r.pct=Math.max(p,fb<=0?100:0);r.lv=fb<=0?'crit':fb<=0.6?'warn':'watch';r.st=fb<=0?'ล้นตลิ่ง (รายงานพื้นที่)':`ต่ำกว่าตลิ่ง ${Math.round(CO.lo*100)}–${Math.round(CO.hi*100)} ซม. (รายงาน ${new Date(CO.t).toLocaleTimeString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'})} น.)`})}
  if(fieldOn())rows.slice(0,3).forEach(r=>{r.lv='crit';r.st=(()=>{const c=fieldFc();return c?'น้ำท่วม (คาดการณ์ '+fx(c.lo,1)+'–'+fx(c.hi,1)+' ม.)':'น้ำท่วมแล้ว'})();r.pct=Math.max(r.pct,100)});TWR=rows;setTimeout(()=>{try{renderAnalysis()}catch(e){}},0);const ord={ok:0,watch:1,warn:2,crit:3};const top=rows.slice(0,3).reduce((m,r)=>ord[r.lv]>ord[m]?r.lv:m,'ok');
  const lvT={ok:'ปกติ',watch:'เฝ้าระวัง',warn:'ใกล้เต็มตลิ่ง',crit:'น้ำล้นตลิ่ง'}[top];const lvT2=fieldOn()?'น้ำท่วมแล้ว':lvT;
  $('tws').className='banner';$('tws').innerHTML=`<span class="lv s-${top==='ok'?'ok':top}">${lvT2}</span><div class="hd">${fieldOn()?'รายงานจากพื้นที่ '+thTime(FIELD.t)+': น้ำท่วมในเขตเทศบาล '+fx(FIELD.dlo,1)+'–'+fx(FIELD.dhi,1)+' ม. (คาดการณ์ตอนนี้ ≈ '+fx(fieldFc().lo,1)+'–'+fx(fieldFc().hi,1)+' ม.) · ':''}น้ำจากบ้านบึง ~${fx(qB,0)} ลบ.ม./วิ แยกเข้าเมือง ~${fx(Qt,0)} ลบ.ม./วิ ผ่านสะพานบ้านช้างและวัดเกาะแก้ว ที่เหลือ ~${fx(Math.max(qB-Qt,0),0)} ไปทางห้วยเกวียน${backA?' · '+DSx.why+' น้ำในเมืองระบายช้า':''} · ฝน 24 ชม. ที่ผ่านมา ${fx(p24,1)} มม. · พยากรณ์ 24 ชม. ${fx(f24,1)} มม.${imax>0?` (หนักสุด ${fx(imax,1)} มม./ชม.${ih?' ราว '+String(ih[0]).slice(-2)+':00 น.':''})`:''}</div>`;
@@ -387,7 +389,7 @@ function flDrawTown(cx){if(!flShow.t)return;const K=FLM.K,s=K/2/FLZ;cx.save();cx
   cx.fillStyle=c;cx.font=`700 ${11.5*s}px system-ui,sans-serif`;cx.fillText(t1,bx+6*s,by+14*s);if(r){cx.font=`600 ${10*s}px system-ui,sans-serif`;cx.fillStyle='#333';cx.fillText(t2,bx+6*s,by+27*s);cx.fillStyle=c;cx.fillText(t3,bx+6*s,by+40*s)}};
  box(13.4425,101.1795,'sq',0,'สะพานบ้านช้าง',-70,12);box(13.4566,101.1809,'tri',1,'วัดเกาะแก้ว–ตลาดเก่า',95,30);if(TWR&&TWR[4])box(13.4520,101.1782,'sq',4,'สะพานหน้าอำเภอ',-115,-45);const hm=FLTOWN.hk[Math.floor(FLTOWN.hk.length*0.45)];box(hm[0],hm[1],'sq',3,'ห้วยเกวียน (เลี่ยงเมือง)',-60,70);
  cx.restore()}
-let FIELD=null,FLZ=1;const FB_OFF=true;const FLZL=()=>FLZ/Math.min(FLZ,4);setInterval(()=>{try{renderFieldAlert();if(typeof D!=='undefined'&&D){render()}}catch(e){}},600000);
+let FIELD=null,CANAL=null,FLZ=1;const FB_OFF=true;const FLZL=()=>FLZ/Math.min(FLZ,4);setInterval(()=>{try{renderFieldAlert();if(typeof D!=='undefined'&&D){render()}}catch(e){}},600000);
 function bbAlert(){const b=(typeof D!=='undefined'&&D&&D.bb)||{};if(b.p72==null&&b.f24==null)return null;const pb3=(b.p72||0)/3,f24=b.f24||0;const today=new Date(Date.now()+7*3600e3).toISOString().slice(5,10);const dy=b.dy||[];const nx=dy.filter(r=>r[0]>today).slice(0,2);const n2=nx.reduce((a,r)=>a+(+r[1]||0),0);
  const key=Math.max(pb3,f24);const lv=key>=50?'crit':key>=30?'warn':key>=15?'watch':'ok';const q3=0.5*0.011574*pb3*408,qt=0.5*0.011574*pb3*474;
  const msg={crit:'ตัวเมืองเสี่ยงน้ำท่วม (เคยท่วม 0.5–1 ม. ที่ระดับนี้) · น้ำถึงเมืองใน 8–16 ชม.',warn:'เตรียมรับน้ำในเมืองภายใน 8–16 ชม. · คลองในเมืองใกล้เต็มตลิ่ง',watch:'เฝ้าระวัง · ต่ำกว่าเกณฑ์เตือน (30 มม./วัน)',ok:'ปกติ · ต่ำกว่าเกณฑ์เตือนมาก'}[lv];
@@ -636,7 +638,7 @@ async function load(){
  try{WN=await getJSON('data/wn.json');}catch(e){WN=null;}renderWN();if(D)renderKL();
  try{HELP=await getJSON('data/help.json');}catch(e){HELP=null;}renderHelp();
  try{WARN=await getJSON('data/warn.json');}catch(e){WARN=null;}renderWarn();
- try{FIELD=await getJSON('data/field.json');}catch(e){FIELD=null;}renderFieldAlert();if(D){try{renderTown()}catch(e){}}
+ try{CANAL=await getJSON('data/canal_obs.json');}catch(e){CANAL=null;}try{FIELD=await getJSON('data/field.json');}catch(e){FIELD=null;}renderFieldAlert();if(D){try{renderTown()}catch(e){}}
  try{REPS=await getJSON('data/reports.json');}catch(e){REPS=null;}try{OBS=await getJSON('data/gistda_flood.json');}catch(e){OBS=null;}if(D)renderFL();
 }
 window.__redraw=()=>{if(D){drawCharts();renderWN();renderKL();}};
