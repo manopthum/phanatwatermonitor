@@ -885,6 +885,9 @@ const add=(t,who)=>{const d=document.createElement('div');d.className='cbm '+who
 let busy=false,greeted=false;
 let qrShown=false;
 let epC=null;
+const isLineQ=q=>/ไลน์ไอดี|ไอดีไลน์|lineid|idline|idไลน์|ไอดีline|lineoa|ไลน์oa|ไลน์โอเอ|ไลน์ศูนย์|lineศูนย์|ไลน์ของศูนย์|lineของศูนย์|แอดไลน์|addline|แอดline|เพิ่มเพื่อนไลน์|เพิ่มเพื่อนline|ชื่อไลน์|qrไลน์|qrline|คิวอาร์ไลน์|คิวอาร์โค้ดไลน์|ช่องทางไลน์/.test(q.toLowerCase().replace(/\s+/g,''));
+async function lineQR(w){try{const r=await fetch('data/line_oa.json?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const oa=await r.json();if(!/^https:\/\//.test(oa.url||''))return;
+ const box=document.createElement('div');box.className='cbqr';box.appendChild(qrFig(oa.url,'สแกนเพื่อเพิ่มเพื่อน LINE'+(oa.id?' '+oa.id:'')));w.appendChild(box);LG.scrollTop=LG.scrollHeight}catch(e){}}
 async function chatEP(){if(epC&&Date.now()-epC.t<(epC.u?600000:120000))return epC.u;let u='';
  try{const r=await fetch('data/chat_ep.json?'+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();if(/^https:\/\/[^\s]+\/api\/chat$/.test(j.url||''))u=j.url}}catch(e){}
  epC={u,t:Date.now()};return u}
@@ -944,7 +947,7 @@ async function ask(q){q=(q||'').trim();if(!q||busy)return;add(q,'u');I.value='';
  let ep='api/chat';
  if(remote){ep=await chatEP();if(!ep){remoteHelp();return}}
  busy=true;F.querySelector('button').disabled=true;const w=add('น้องหยดน้ำกำลังคิด…','b');
- try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,sid}),signal:ctl.signal});clearTimeout(tm);if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้')}
+ try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,sid}),signal:ctl.signal});clearTimeout(tm);if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้');if(isLineQ(q))lineQR(w)}
  catch(e){if(remote){w.remove();epC={u:'',t:Date.now()};remoteHelp()}else w.innerHTML=fmt('ขออภัยค่ะ เชื่อมต่อไม่ได้ ลองใหม่อีกครั้งนะคะ')}
  finally{busy=false;F.querySelector('button').disabled=false;LG.scrollTop=LG.scrollHeight}}
 B.onclick=()=>{X.classList.toggle('on');if(X.classList.contains('on')){if(!greeted){greeted=true;add('สวัสดีค่ะ 💧 น้องหยดน้ำจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคมค่ะ ถามเรื่องน้ำ ฝน น้ำท่วม หรือกดปุ่มด้านล่างได้เลยค่ะ\n(ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784 ทันที)','b')}setTimeout(()=>I.focus(),50)}};
