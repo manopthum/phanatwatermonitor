@@ -94,13 +94,14 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 #cbBox{position:fixed;right:18px;bottom:76px;z-index:901;width:min(380px,calc(100vw - 24px));height:min(560px,calc(100vh - 110px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden}
 .cbqr{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:6px 0 2px;white-space:normal}.cbqr figure{margin:0;flex:0 1 128px;text-align:center;font-size:12px}.cbqr .qb{background:#fff;border-radius:8px;padding:4px;width:120px;height:120px;margin:0 auto;box-sizing:content-box;line-height:0}.cbqr .qb svg{width:120px!important;height:120px!important;display:block}.cbqr figcaption{margin-top:5px;line-height:1.35}.cbqr a{word-break:break-all}
 .cbAv{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none;background:#DDF0F6}#cbBtn{display:inline-flex;align-items:center;gap:8px}#cbBtn .cbAv{width:34px;height:34px;margin:-6px 0 -6px -8px;border:2px solid rgba(255,255,255,.85)}.cbHn{display:inline-flex;align-items:center;gap:8px}
+.cbForm{max-width:94%!important;white-space:normal!important}.cbForm .cbStep{margin:8px 0 4px;font-size:13px;color:var(--muted)}.cbCh{display:flex;flex-wrap:wrap;gap:6px}.cbc,.cbLoc,.cbAct button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 11px;font:500 13px var(--sans);cursor:pointer}.cbc.on{background:var(--water);border-color:var(--water);color:#fff}.cbLs{font-size:12.5px;margin-top:4px;color:var(--muted)}.cbLs a{color:var(--water)}.cbIn{width:100%;box-sizing:border-box;margin-top:6px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:14px var(--sans);resize:vertical}.cbAct{display:flex;gap:8px;margin-top:10px}.cbAct .cbSend{background:var(--water);border-color:var(--water);color:#fff;font-weight:600}.cbNote{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45}.cbTel{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}.cbTel a{display:block;text-align:center;padding:9px;border-radius:10px;background:var(--critbg);color:var(--crit);font-weight:600;text-decoration:none;border:1px solid var(--crit)}#cbQ .cbUrg{border-color:var(--crit);color:var(--crit)}.cbForm button:disabled,.cbForm input:disabled,.cbForm textarea:disabled{opacity:.55;cursor:default}
 #cbBox.on{display:flex}#cbHd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:600}
 #cbHd button{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer}
 #cbLog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
 .cbm{max-width:88%;padding:8px 12px;border-radius:12px;white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.55}
 .cbm.u{align-self:flex-end;background:var(--water);color:#fff;border-bottom-right-radius:4px}.cbm.b{align-self:flex-start;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-bottom-left-radius:4px}
 .cbm a{color:var(--water)}.cbm.u a{color:#fff}
-#cbQ{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 8px}#cbQ button{border:1px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:999px;padding:4px 10px;font:13px var(--sans);cursor:pointer}
+#cbQ{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:0 12px 8px;scrollbar-width:thin}#cbQ button{flex:none;white-space:nowrap}#cbQ button{border:1px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:999px;padding:4px 10px;font:13px var(--sans);cursor:pointer}
 #cbF{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}#cbF input{flex:1;min-width:0;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:10px;padding:9px 12px;font:15px var(--sans)}
 #cbF button{border:0;background:var(--water);color:#fff;border-radius:10px;padding:0 14px;font:600 14px var(--sans);cursor:pointer}#cbF button:disabled{opacity:.5}
 .mapview #cbBtn{bottom:12px}
@@ -873,7 +874,7 @@ B.onclick=function(){
 <button id="cbBtn" type="button" aria-label="แชตกับน้องหยดน้ำ"><img src="icons/chat-96.png" alt="" class="cbAv">ถามน้องหยดน้ำ</button>
 <div id="cbBox" role="dialog" aria-label="แชตกับน้องหยดน้ำ"><div id="cbHd"><span class="cbHn"><img src="icons/chat-96.png" alt="" class="cbAv">น้องหยดน้ำ · ผู้ช่วย AI</span><button type="button" id="cbX" aria-label="ปิด">×</button></div>
 <div id="cbLog" aria-live="polite"></div>
-<div id="cbQ"><button type="button">สถานการณ์</button><button type="button">ระดับน้ำ</button><button type="button">อ่างเก็บน้ำ</button><button type="button">ฝน</button><button type="button">น้ำเท่าไรถึงท่วม</button><button type="button" data-sat="1">🛰 ภาพถ่ายดาวเทียม</button></div>
+<div id="cbQ"><button type="button" data-act="help" class="cbUrg">🆘 ขอความช่วยเหลือ</button><button type="button" data-act="rep">📍 แจ้งน้ำท่วม</button><button type="button">สถานการณ์</button><button type="button">ระดับน้ำ</button><button type="button">อ่างเก็บน้ำ</button><button type="button">ฝน</button><button type="button">น้ำเท่าไรถึงท่วม</button><button type="button" data-sat="1">🛰 ภาพถ่ายดาวเทียม</button></div>
 <form id="cbF"><input id="cbI" maxlength="500" placeholder="พิมพ์คำถามเรื่องน้ำ ฝน น้ำท่วม…" autocomplete="off"><button type="submit">ส่ง</button></form></div>
 <script>(function(){
 const B=document.getElementById('cbBtn'),X=document.getElementById('cbBox'),LG=document.getElementById('cbLog'),F=document.getElementById('cbF'),I=document.getElementById('cbI');
@@ -888,8 +889,12 @@ let epC=null;
 const isLineQ=q=>/ไลน์ไอดี|ไอดีไลน์|lineid|idline|idไลน์|ไอดีline|lineoa|ไลน์oa|ไลน์โอเอ|ไลน์ศูนย์|lineศูนย์|ไลน์ของศูนย์|lineของศูนย์|แอดไลน์|addline|แอดline|เพิ่มเพื่อนไลน์|เพิ่มเพื่อนline|ชื่อไลน์|qrไลน์|qrline|คิวอาร์ไลน์|คิวอาร์โค้ดไลน์|ช่องทางไลน์/.test(q.toLowerCase().replace(/\s+/g,''));
 async function lineQR(w){try{const r=await fetch('data/line_oa.json?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const oa=await r.json();if(!/^https:\/\//.test(oa.url||''))return;
  const box=document.createElement('div');box.className='cbqr';box.appendChild(qrFig(oa.url,'สแกนเพื่อเพิ่มเพื่อน LINE'+(oa.id?' '+oa.id:'')));w.appendChild(box);LG.scrollTop=LG.scrollHeight}catch(e){}}
-async function chatEP(){if(epC&&Date.now()-epC.t<(epC.u?600000:120000))return epC.u;let u='';
- try{const r=await fetch('data/chat_ep.json?'+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();if(/^https:\/\/[^\s]+\/api\/chat$/.test(j.url||''))u=j.url}}catch(e){}
+async function chatEP(fresh){if(!fresh&&epC&&Date.now()-epC.t<(epC.u?600000:60000))return epC.u;let u='';
+ const ok=j=>j&&/^https:\/\/[^\s]+\/api\/chat$/.test(j.url||'')?j.url:'';
+ const src=[];const m=location.hostname.match(/^([^.]+)\.github\.io$/);
+ if(m){const seg=location.pathname.split('/').filter(Boolean)[0]||(m[1]+'.github.io');src.push('https://raw.githubusercontent.com/'+m[1]+'/'+seg+'/main/data/chat_ep.json?'+Date.now())}
+ src.push('data/chat_ep.json?'+Date.now());
+ for(const x of src){try{const r=await fetch(x,{cache:'no-store'});if(r.ok){u=ok(await r.json());if(u)break}}catch(e){}}
  epC={u,t:Date.now()};return u}
 function makeQR(text){
  const EC=[0,[10,1,16,0,0],[16,1,28,0,0],[26,1,44,0,0],[18,2,32,0,0],[24,2,43,0,0],[16,4,27,0,0],[18,4,31,0,0],[22,2,38,2,39],[22,3,36,2,37],[26,4,43,1,44]];
@@ -943,11 +948,50 @@ async function remoteHelp(){
  const box=document.createElement('div');box.className='cbqr';d.appendChild(box);
  if(oa)box.appendChild(qrFig(oa.url,'เพิ่มเพื่อน LINE แล้วพิมพ์ถามได้เลย'));box.appendChild(qrFig(SITE,'เว็บหลัก (มีแชตน้องหยดน้ำ)'));
  LG.scrollTop=LG.scrollHeight}
+const DEPTHS=['ไม่ท่วม','ข้อเท้า','หน้าแข้ง','เข่า','เอว','สูงกว่าเอว'],HTYPES=['ติดอยู่/ต้องการอพยพ','เจ็บป่วย/บาดเจ็บ','ผู้สูงอายุ/ผู้ป่วยติดเตียง','อาหาร/น้ำดื่ม','อื่น ๆ'],HPEOPLE=['1 คน','2-3 คน','4-6 คน','มากกว่า 6 คน'];
+const TELS='<div class="cbTel"><a href="tel:1669">📞 1669 เจ็บป่วยฉุกเฉิน</a><a href="tel:1784">📞 1784 สายด่วน ปภ.</a><a href="tel:038461144">📞 038-461-144 เทศบาลฯ</a></div>';
+function chips(list,name){return '<div class="cbCh" data-n="'+name+'">'+list.map(x=>'<button type="button" class="cbc" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>'}
+function bindChips(f){f.querySelectorAll('.cbCh').forEach(g=>g.querySelectorAll('.cbc').forEach(b=>b.onclick=()=>{g.querySelectorAll('.cbc').forEach(x=>x.classList.remove('on'));b.classList.add('on');g.dataset.val=b.dataset.v}))}
+function locBind(f,cb){const b=f.querySelector('.cbLoc'),st=f.querySelector('.cbLs');b.onclick=()=>{
+ if(!window.isSecureContext||!navigator.geolocation){st.innerHTML='หน้านี้ขอตำแหน่งไม่ได้ (เว็บ http) — ใช้แอปหรือลิงก์สำรอง https ได้ค่ะ';return}
+ st.textContent='กำลังหาตำแหน่ง…';b.disabled=true;
+ navigator.geolocation.getCurrentPosition(p=>{b.disabled=false;const la=+p.coords.latitude.toFixed(5),lo=+p.coords.longitude.toFixed(5),ac=Math.round(p.coords.accuracy||0);cb(la,lo);
+  st.innerHTML='✅ ได้ตำแหน่งแล้ว (คลาดเคลื่อน ±'+ac+' ม.) <a href="https://maps.google.com/?q='+la+','+lo+'" target="_blank" rel="noopener">ดูบนแผนที่</a>'},
+ e=>{b.disabled=false;st.textContent=e.code===1?'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง — เปิดสิทธิ์ตำแหน่งในการตั้งค่าเบราว์เซอร์แล้วลองใหม่ค่ะ':'หาตำแหน่งไม่สำเร็จ ลองใหม่ในที่โล่งค่ะ'},{enableHighAccuracy:true,timeout:20000,maximumAge:60000})}}
+async function postForm(path,body){let base=remote?await chatEP():'api/chat';if(!base)return null;
+ const go=u=>postChat(u.replace(/\/api\/chat$|api\/chat$/,m=>m.replace('chat',path)),body);
+ try{return await go(base)}catch(e){if(!remote)throw e;const b2=await chatEP(true);if(!b2||b2===base)throw e;return await go(b2)}}
+function formBox(html){const d=add('','b');d.classList.add('cbForm');d.innerHTML=html;LG.scrollTop=LG.scrollHeight;return d}
+function done(f,j){f.querySelectorAll('button,input,textarea').forEach(x=>x.disabled=true);add(j&&j.msg||'ขออภัยค่ะ ส่งไม่สำเร็จ ถ้าเร่งด่วนโทร 1669 หรือ 1784 ทันที','b')}
+function repForm(){let la=null,lo=null;const f=formBox('<b>📍 แจ้งน้ำท่วมจุดที่คุณอยู่</b><div class="cbStep">1) ตำแหน่ง (ต้องอยู่ที่จุดนั้น)</div><button type="button" class="cbLoc">📍 ใช้ตำแหน่งปัจจุบัน</button><div class="cbLs"></div>'+
+ '<div class="cbStep">2) น้ำสูงประมาณ (วัดจากคนยืน)</div>'+chips(DEPTHS,'d')+'<div class="cbAct"><button type="button" class="cbSend">ส่งการแจ้ง</button><button type="button" class="cbCancel">ยกเลิก</button></div>'+
+ '<div class="cbNote">จุดที่แจ้งจะขึ้นบนแผนที่ในแดชบอร์ด โดยไม่แสดงชื่อผู้แจ้ง · ⚠️ ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784 ทันที</div>');
+ bindChips(f);locBind(f,(a,b)=>{la=a;lo=b});f.querySelector('.cbCancel').onclick=()=>{f.querySelectorAll('button').forEach(x=>x.disabled=true);add('ยกเลิกการแจ้งแล้วค่ะ','b')};
+ f.querySelector('.cbSend').onclick=async()=>{const d=f.querySelector('[data-n=d]').dataset.val;if(la==null){f.querySelector('.cbLs').textContent='กรุณากด "ใช้ตำแหน่งปัจจุบัน" ก่อนค่ะ';return}if(!d){add('กรุณาเลือกความสูงของน้ำค่ะ','b');return}
+  const s=f.querySelector('.cbSend');s.disabled=true;s.textContent='กำลังส่ง…';let j=null;try{j=await postForm('report',{lat:la,lon:lo,d,sid})}catch(e){}
+  if(j===null&&remote){done(f,{msg:'ตอนนี้ส่งการแจ้งไม่ได้ค่ะ แจ้งผ่าน LINE ของศูนย์แทนได้ (พิมพ์ "แจ้งน้ำท่วม" ใน LINE) ⚠️ ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784'});remoteHelp();return}
+  if(j&&!j.ok){s.disabled=false;s.textContent='ส่งการแจ้ง';add(j.msg,'b');return}done(f,j)}}
+function helpForm(){let la=null,lo=null;const f=formBox('<b>🚨 ถ้ามีอันตรายถึงชีวิต โทรทันที</b>'+TELS+
+ '<div class="cbStep">ถ้าต้องการให้ส่งเรื่องต่อผู้ดูแลศูนย์ กรอกด้านล่างค่ะ</div><div class="cbStep">ประเภทความช่วยเหลือ</div>'+chips(HTYPES,'type')+
+ '<div class="cbStep">จำนวนคน</div>'+chips(HPEOPLE,'people')+
+ '<div class="cbStep">ตำแหน่ง</div><button type="button" class="cbLoc">📍 ใช้ตำแหน่งปัจจุบัน</button><div class="cbLs"></div><textarea class="cbIn" rows="2" maxlength="200" placeholder="ที่อยู่ / จุดสังเกต เช่น ซอย บ้านเลขที่ ใกล้วัด…"></textarea>'+
+ '<div class="cbStep">เบอร์โทรที่ติดต่อกลับได้ (ผู้ดูแลเท่านั้นที่เห็น)</div><input class="cbIn cbPh" type="tel" inputmode="tel" maxlength="16" placeholder="08xxxxxxxx" autocomplete="tel">'+
+ '<div class="cbAct"><button type="button" class="cbSend">ส่งคำขอ</button><button type="button" class="cbCancel">ยกเลิก</button></div>'+
+ '<div class="cbNote">ศูนย์นี้ไม่ใช่หน่วยกู้ภัย จะส่งต่อข้อมูลให้ผู้ดูแลประสานงาน ไม่สามารถรับประกันเวลาช่วยเหลือได้</div>');
+ bindChips(f);locBind(f,(a,b)=>{la=a;lo=b});f.querySelector('.cbCancel').onclick=()=>{f.querySelectorAll('button,input,textarea').forEach(x=>x.disabled=true);add('ยกเลิกคำขอแล้วค่ะ ถ้าเร่งด่วนโทร 1669 หรือ 1784 ได้ตลอดค่ะ','b')};
+ f.querySelector('.cbSend').onclick=async()=>{const type=f.querySelector('[data-n=type]').dataset.val,people=f.querySelector('[data-n=people]').dataset.val,addr=f.querySelector('textarea').value.trim(),phone=f.querySelector('.cbPh').value.trim();
+  if(!type){add('กรุณาเลือกประเภทความช่วยเหลือค่ะ','b');return}if(la==null&&addr.length<5){add('กรุณากด "ใช้ตำแหน่งปัจจุบัน" หรือพิมพ์ที่อยู่/จุดสังเกตค่ะ','b');return}
+  if(phone.replace(/[^0-9+]/g,'').length<9){add('กรุณาใส่เบอร์โทรที่ติดต่อกลับได้ค่ะ','b');return}
+  const s=f.querySelector('.cbSend');s.disabled=true;s.textContent='กำลังส่ง…';let j=null;try{j=await postForm('help',{type,people:people||'-',lat:la,lon:lo,addr,phone,sid})}catch(e){}
+  if(j===null){done(f,{msg:'⚠️ ตอนนี้ส่งคำขอไปที่ศูนย์ไม่ได้ค่ะ กรุณาโทร 1669 หรือ 1784 ทันที หรือขอความช่วยเหลือผ่าน LINE ของศูนย์ (พิมพ์ "ขอความช่วยเหลือ")'});if(remote)remoteHelp();return}
+  if(!j.ok){s.disabled=false;s.textContent='ส่งคำขอ';add(j.msg,'b');return}done(f,j)}}
+async function postChat(ep,q){const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);try{const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(typeof q==='object'?q:{q,sid}),signal:ctl.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(tm)}}
 async function ask(q){q=(q||'').trim();if(!q||busy)return;add(q,'u');I.value='';
+ const qn=q.replace(/\s+/g,'');if(/^(ขอความช่วยเหลือ|ช่วยด้วย|ขอความช่วยเหลือด่วน)$/.test(qn)){helpForm();return}if(/^(แจ้งน้ำท่วม|แจ้งน้ำ|แจ้งเหตุ|รายงานน้ำท่วม)$/.test(qn)){repForm();return}
  let ep='api/chat';
  if(remote){ep=await chatEP();if(!ep){remoteHelp();return}}
  busy=true;F.querySelector('button').disabled=true;const w=add('น้องหยดน้ำกำลังคิด…','b');
- try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,sid}),signal:ctl.signal});clearTimeout(tm);if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้');if(isLineQ(q))lineQR(w)}
+ try{let j;try{j=await postChat(ep,q)}catch(e){if(!remote)throw e;const e2=await chatEP(true);if(!e2||e2===ep)throw e;j=await postChat(e2,q)}w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้');if(isLineQ(q))lineQR(w)}
  catch(e){if(remote){w.remove();epC={u:'',t:Date.now()};remoteHelp()}else w.innerHTML=fmt('ขออภัยค่ะ เชื่อมต่อไม่ได้ ลองใหม่อีกครั้งนะคะ')}
  finally{busy=false;F.querySelector('button').disabled=false;LG.scrollTop=LG.scrollHeight}}
 B.onclick=()=>{X.classList.toggle('on');if(X.classList.contains('on')){if(!greeted){greeted=true;add('สวัสดีค่ะ 💧 น้องหยดน้ำจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคมค่ะ ถามเรื่องน้ำ ฝน น้ำท่วม หรือกดปุ่มด้านล่างได้เลยค่ะ\n(ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784 ทันที)','b')}setTimeout(()=>I.focus(),50)}};
@@ -955,7 +999,7 @@ document.getElementById('cbX').onclick=()=>X.classList.remove('on');
 F.onsubmit=e=>{e.preventDefault();ask(I.value)};
 function satOpen(){add('ภาพถ่ายดาวเทียม','u');const u=location.pathname+'?view=sat';const d=add('🛰 เปิดหน้าภาพดาวเทียมล่าสุดให้แล้วค่ะ (Himawari ภาพเมฆล่าสุด · MODIS ภาพรายวัน · ซูมเข้าเพื่อดูชื่อตำบล)\n','b');const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';a.textContent='เปิดหน้าภาพดาวเทียม';d.appendChild(a);
  if(document.documentElement.classList.contains('satview'))return;const w=window.open(u,'_blank','noopener');if(!w){const p=document.getElementById('satPanel');if(p){X.classList.remove('on');p.scrollIntoView({behavior:'smooth',block:'start'})}}}
-document.querySelectorAll('#cbQ button').forEach(b=>b.onclick=()=>b.dataset.sat?satOpen():ask(b.textContent));
+document.querySelectorAll('#cbQ button').forEach(b=>b.onclick=()=>b.dataset.sat?satOpen():b.dataset.act?(add(b.textContent.replace(/^\S+\s/,''),'u'),b.dataset.act==='help'?helpForm():repForm()):ask(b.textContent));
 })();</script>
 </body>
 </html>
