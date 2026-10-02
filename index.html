@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>(function(){try{var q=new URLSearchParams(location.search);if(q.get("view")==="map"||location.hash==="#map")document.documentElement.classList.add("mapview")}catch(e){}})();</script>
 <script>(function(){var t=null;try{t=localStorage.getItem("pn-theme")}catch(e){}document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark")})();</script>
 <style>
 :root{--bg:#EDF1F0;--surface:#FFFFFF;--sunk:#F5F8F7;--ink:#122019;--ink2:#34453F;--muted:#5E6F6A;--line:#D9E1DE;--water:#0F6CA8;--water2:#8DB9DC;--ok:#2E7D4F;--okbg:#E3F1E8;--watch:#8A6D00;--watchbg:#FBF3D6;--warn:#B55310;--warnbg:#FCE9DA;--crit:#B3261E;--critbg:#FBE3E1;
@@ -80,6 +81,7 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 .fsb{font:inherit;font-size:13px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:inherit;cursor:pointer}.fsb:hover{border-color:currentColor}.topr{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .clk{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;padding:4px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}.clk b{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:22px;font-weight:600;letter-spacing:.5px;font-variant-numeric:tabular-nums}.clk span{font-size:12px;color:var(--ink2)}
 .cctv{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.cc{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface);display:flex;flex-direction:column;gap:6px}.cch{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.ccd{font-size:13.5px;color:var(--ink2);line-height:1.55}.ccl{display:flex;flex-direction:column;gap:2px;font-size:14px}.ccu{margin:0;padding-left:18px;font-size:14px;line-height:1.7}.cc a{color:var(--water)}.cc .pill{font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap}.p-ok{background:var(--okbg);color:var(--ok)}.p-watch{background:var(--watchbg);color:var(--watch)}
+.mapview .wrap>*:not(#flPanel):not(#mvBar){display:none!important}.mapview #flTabs,.mapview #flCtl,.mapview #flShow,.mapview #flObsM,.mapview #flNow{display:none!important}.mapview .wrap{padding-block:10px 30px;gap:10px}.mapview #mvBar{display:flex!important}
 </style>
 </head>
 <body>
@@ -119,6 +121,7 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 
 <div class="panel"><div class="ph"><h2>บทวิเคราะห์</h2><span class="m">สร้างจากข้อมูลรอบล่าสุด</span></div><ul class="an" id="an"><li><i class="s-watch"></i><span>กำลังโหลด…</span></li></ul></div>
 
+<div id="mvBar" style="display:none;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px"><a href="./" style="color:var(--water)">← ดูแดชบอร์ดทั้งหมด</a><span class="m">แผนที่พื้นที่เสี่ยงน้ำท่วม · ศูนย์ติดตามสถานการณ์น้ำพนัสนิคม</span></div>
 <div class="panel" id="flPanel"><div class="ph"><h2>พื้นที่เสี่ยงน้ำท่วม: น้ำล้นอ่าง + ฝนในพื้นที่ + น้ำจากบ้านบึง + น้ำหนุนบางปะกง</h2><span class="m" id="flm">คำนวณใหม่ทุกรอบอัปเดต</span></div>
 <div id="flTabs" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"></div>
 <div id="flCtl" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:6px 24px;margin-bottom:10px;font-size:13px"></div>
@@ -327,7 +330,7 @@ function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','�
  S.push(['ควรทำ',todo.join(' · ')]);
  S.push(['เบอร์ติดต่อ','เจ็บป่วยฉุกเฉิน <b>1669</b> · สายด่วน ปภ. <b>1784</b> · เทศบาลเมืองพนัสนิคม <b>038-461-144</b>']);
  const L={ok:['ปกติ','--ok'],watch:['เฝ้าระวัง','--watch'],warn:['เตรียมพร้อม','--warn'],crit:['อันตราย น้ำท่วม','--crit']}[lv];
- el.innerHTML=`<div style="display:inline-block;background:var(${L[1]});color:#fff;font-weight:700;padding:4px 14px;border-radius:999px;margin-bottom:8px">${L[0]}</div>`+S.map(([h,t])=>`<div style="margin:4px 0"><b style="display:inline-block;min-width:150px">${h}:</b> ${t}</div>`).join('');
+ el.innerHTML=`<div style="display:inline-block;background:var(${L[1]});color:#fff;font-weight:700;padding:4px 14px;border-radius:999px;margin-bottom:8px">${L[0]}</div>`+S.map(([h,t])=>`<div style="margin:4px 0;display:grid;grid-template-columns:minmax(110px,160px) 1fr;column-gap:10px"><b>${h}:</b><div>${t}</div></div>`).join('');
  const now=new Date();$('pubm').textContent='อัปเดต '+now.toLocaleString('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' น.';
  PUB_TXT=`สถานการณ์น้ำพนัสนิคม (${$('pubm').textContent}) — ${L[0]}\n`+S.map(([h,t])=>`• ${h}: ${t.replace(/<[^>]+>/g,'')}`).join('\n')+'\n(สรุปอัตโนมัติจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคม ไม่ใช่ประกาศทางราชการ)';
  const b=$('pubCopy');if(b&&!b.onclick)b.onclick=async()=>{let ok=false;try{await navigator.clipboard.writeText(PUB_TXT);ok=true}catch(e){try{const ta=document.createElement('textarea');ta.value=PUB_TXT;document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}catch(e2){}}$('pubCopyMsg').textContent=ok?'คัดลอกแล้ว':'คัดลอกไม่สำเร็จ ลองเลือกข้อความเอง'}}
@@ -691,7 +694,7 @@ function renderHelp(){setTimeout(()=>{try{renderAnalysis()}catch(e){}},0);if(FB_
 function fail(msg){$('fresh').className='fresh stale';$('fresh').querySelector('span').textContent=msg;$('banner').innerHTML=`<span class="lv s-watch">ไม่มีข้อมูล</span><div class="hd">${esc(msg)}</div><div class="ds">ตรวจว่า server.py กำลังทำงานและอัปเดตไฟล์ในโฟลเดอร์ data ได้</div>`;}
 async function getJSON(p){const r=await fetch(p+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json();}
 async function load(){
- try{const d=await getJSON('data/latest.json');if(!D||d.u!==D.u){D=d;render();}}catch(e){if(!D)fail('ยังไม่มีข้อมูลรอบแรก (data/latest.json)');}
+ try{const d=await getJSON('data/latest.json');LAST_OK=Date.now();if(!D||d.u!==D.u||!REND_OK){D=d;try{render();REND_OK=true}catch(e){REND_OK=false;console.error('render',e)}}}catch(e){if(!D)fail('ยังไม่มีข้อมูลรอบแรก (data/latest.json)');}
  try{const h=await getJSON('data/history.json');H=(Array.isArray(h)?h:[]).slice(-96);if(D){drawCharts();renderKL();renderFL();}}catch(e){}
  try{WN=await getJSON('data/wn.json');}catch(e){WN=null;}renderWN();if(D)renderKL();
  try{HELP=await getJSON('data/help.json');}catch(e){HELP=null;}renderHelp();
@@ -700,8 +703,15 @@ async function load(){
  try{REPS=await getJSON('data/reports.json');}catch(e){REPS=null;}try{OBS=await getJSON('data/gistda_flood.json');}catch(e){OBS=null;}if(D)renderFL();
 }
 window.__redraw=()=>{if(D){drawCharts();renderWN();renderKL();}};
-load();
-setInterval(load,5*60000);
+let REND_OK=false,LAST_OK=0,LOADING=false;const PAGE_T0=Date.now();
+async function safeLoad(){if(LOADING)return;LOADING=true;try{await load()}catch(e){console.error('load',e)}finally{LOADING=false}}
+safeLoad();
+setInterval(safeLoad,5*60000);
+// จอทีวี/Android box ที่เปิดค้างไว้นาน: โหลดข้อมูลใหม่เมื่อกลับมาแสดงผลหรือเน็ตกลับมา และรีเฟรชทั้งหน้าทุก 2 ชม. (กันหน่วยความจำเต็ม/ค้าง)
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)safeLoad()});
+window.addEventListener('online',()=>safeLoad());
+setInterval(()=>{const lb=document.querySelector('#lbx.on,.lbx.on');if(Date.now()-PAGE_T0>2*3600e3&&!lb&&navigator.onLine!==false)location.reload()},60000);
+setInterval(()=>{if(LAST_OK&&Date.now()-LAST_OK>20*60000&&navigator.onLine!==false)location.reload()},5*60000);
 setInterval(()=>{fresh();if(HELP)renderHelp();if(WARN)renderWarn()},60000);
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawCharts);new MutationObserver(drawCharts).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']})}catch(e){}
 })();
