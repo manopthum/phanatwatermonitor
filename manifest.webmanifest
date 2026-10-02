@@ -1,0 +1,22 @@
+{
+  "name": "ศูนย์ติดตามสถานการณ์น้ำพนัสนิคม",
+  "short_name": "น้ำพนัสนิคม",
+  "description": "ระดับน้ำ ฝน อ่างเก็บน้ำ แผนที่พื้นที่เสี่ยงน้ำท่วม และภาพดาวเทียม อ.พนัสนิคม จ.ชลบุรี",
+  "lang": "th",
+  "id": "./",
+  "start_url": "./?source=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0D1312",
+  "theme_color": "#0D1312",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "แผนที่พื้นที่เสี่ยงน้ำท่วม", "short_name": "แผนที่", "url": "./?view=map", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
+    {"name": "ภาพถ่ายดาวเทียมล่าสุด", "short_name": "ดาวเทียม", "url": "./?view=sat", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]}
+  ]
+}

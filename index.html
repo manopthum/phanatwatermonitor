@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ศูนย์ติดตามสถานการณ์น้ำพนัสนิคม</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0D1312">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="น้ำพนัสนิคม">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -95,6 +103,7 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 #cbF{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}#cbF input{flex:1;min-width:0;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:10px;padding:9px 12px;font:15px var(--sans)}
 #cbF button{border:0;background:var(--water);color:#fff;border-radius:10px;padding:0 14px;font:600 14px var(--sans);cursor:pointer}#cbF button:disabled{opacity:.5}
 .mapview #cbBtn{bottom:12px}
+#instTip{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:950;width:min(440px,calc(100vw - 24px));box-sizing:border-box;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 38px 12px 14px;font-size:14px;line-height:1.55;box-shadow:0 10px 30px rgba(0,0,0,.35)}#instTip[hidden]{display:none}#instTip a{color:var(--water);word-break:break-all}#instTip button{position:absolute;top:6px;right:8px;background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer}#instBtn[hidden]{display:none}
 .satview .wrap>*:not(#satPanel):not(#mvBar){display:none!important}.satview .wrap{padding-block:10px 30px;gap:10px}.satview #mvBar{display:flex!important;order:-1}.satview #cbBtn{bottom:12px}
 </style>
 </head>
@@ -102,7 +111,7 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 <div class="wrap">
 <div class="top">
 <div><div class="eyebrow">อ.พนัสนิคม · จ.ชลบุรี · ลุ่มน้ำคลองหลวง–บางปะกง</div><h1>ศูนย์ติดตามสถานการณ์น้ำพนัสนิคม</h1></div>
-<div class="topr"><div id="clk" class="clk" aria-live="off"><b id="clkT">--:--:--</b><span id="clkD"></span></div><div id="fresh" class="fresh"><i></i><span>กำลังโหลดข้อมูล…</span></div><button id="themeBtn" class="fsb" type="button" title="สลับโหมดสว่าง/มืด">☀ โหมดสว่าง</button><button id="fsBtn" class="fsb" type="button">⛶ เต็มจอ</button></div>
+<div class="topr"><div id="clk" class="clk" aria-live="off"><b id="clkT">--:--:--</b><span id="clkD"></span></div><div id="fresh" class="fresh"><i></i><span>กำลังโหลดข้อมูล…</span></div><button id="instBtn" class="fsb" type="button" hidden title="ติดตั้งเป็นแอปบนมือถือ/คอมพิวเตอร์">📲 ติดตั้งแอป</button><button id="themeBtn" class="fsb" type="button" title="สลับโหมดสว่าง/มืด">☀ โหมดสว่าง</button><button id="fsBtn" class="fsb" type="button">⛶ เต็มจอ</button></div>
 </div>
 <div id="fieldAlert" style="display:none;margin-bottom:12px;padding:12px 16px;border-radius:10px;background:#c62828;color:#fff;font-weight:600;line-height:1.5"></div>
 <div id="banner" class="banner"><span class="lv s-watch">กำลังโหลด</span><div class="hd">กำลังอ่านข้อมูลล่าสุด</div><div class="ds">ข้อมูลอัปเดตอัตโนมัติทุก 1 ชั่วโมง</div></div>
@@ -842,6 +851,24 @@ sat();setInterval(sat,5*60000);
 })();
 </script>
 <script>(function(){const b=document.getElementById('themeBtn');if(!b)return;const R=document.documentElement;const set=t=>{R.setAttribute('data-theme',t);b.textContent=t==='dark'?'☀ โหมดสว่าง':'☾ โหมดมืด';try{localStorage.setItem('pn-theme',t)}catch(e){}};b.textContent=R.getAttribute('data-theme')==='dark'?'☀ โหมดสว่าง':'☾ โหมดมืด';b.addEventListener('click',()=>set(R.getAttribute('data-theme')==='dark'?'light':'dark'))})();</script>
+<div id="instTip" role="status" hidden></div>
+<script>(function(){
+var B=document.getElementById('instBtn'),T=document.getElementById('instTip'),dp=null;
+var standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+var ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var GH='https://manopthum.github.io/phanatwatermonitor/';
+function tip(h){T.innerHTML=h+'<button type="button" aria-label="ปิด">×</button>';T.hidden=false;T.querySelector('button').onclick=function(){T.hidden=true}}
+if(window.isSecureContext&&'serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+if(standalone)return;
+addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;B.hidden=false});
+addEventListener('appinstalled',function(){B.hidden=true;dp=null;tip('ติดตั้งแอปแล้ว เปิดได้จากหน้าจอโฮมค่ะ')});
+if(ios||!window.isSecureContext)B.hidden=false;
+B.onclick=function(){
+ if(dp){dp.prompt();dp.userChoice.finally(function(){dp=null;B.hidden=true});return}
+ if(!window.isSecureContext){tip('ติดตั้งเป็นแอปได้จากลิงก์ HTTPS ค่ะ เปิด <a href="'+GH+'" target="_blank" rel="noopener">'+GH.replace('https://','')+'</a> แล้วกด "ติดตั้งแอป" หรือเมนู ⋮ → "ติดตั้งแอป / เพิ่มลงในหน้าจอหลัก"');return}
+ if(ios){tip('บน iPhone/iPad: เปิดใน Safari กดปุ่มแชร์ <b>⬆︎</b> แล้วเลือก <b>"เพิ่มไปยังหน้าจอโฮม"</b>');return}
+ tip('กดเมนู ⋮ ของเบราว์เซอร์ แล้วเลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b>')};
+})();</script>
 <button id="cbBtn" type="button" aria-label="แชตกับน้องหยดน้ำ">💧 ถามน้องหยดน้ำ</button>
 <div id="cbBox" role="dialog" aria-label="แชตกับน้องหยดน้ำ"><div id="cbHd"><span>💧 น้องหยดน้ำ · ผู้ช่วย AI</span><button type="button" id="cbX" aria-label="ปิด">×</button></div>
 <div id="cbLog" aria-live="polite"></div>
