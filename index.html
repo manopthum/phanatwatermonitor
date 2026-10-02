@@ -883,6 +883,10 @@ const fmt=t=>esc(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank
 const add=(t,who)=>{const d=document.createElement('div');d.className='cbm '+who;d.innerHTML=fmt(t);LG.appendChild(d);LG.scrollTop=LG.scrollHeight;return d};
 let busy=false,greeted=false;
 let qrShown=false;
+let epC=null;
+async function chatEP(){if(epC&&Date.now()-epC.t<(epC.u?600000:120000))return epC.u;let u='';
+ try{const r=await fetch('data/chat_ep.json?'+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();if(/^https:\/\/[^\s]+\/api\/chat$/.test(j.url||''))u=j.url}}catch(e){}
+ epC={u,t:Date.now()};return u}
 function makeQR(text){
  const EC=[0,[10,1,16,0,0],[16,1,28,0,0],[26,1,44,0,0],[18,2,32,0,0],[24,2,43,0,0],[16,4,27,0,0],[18,4,31,0,0],[22,2,38,2,39],[22,3,36,2,37],[26,4,43,1,44]];
  const AL=[0,[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
@@ -929,17 +933,18 @@ function qrFig(url,cap){const f=document.createElement('figure');let q='';try{co
 async function remoteHelp(){
  let oa=null;try{const r=await fetch('data/line_oa.json?'+Date.now(),{cache:'no-store'});if(r.ok){oa=await r.json();if(!oa||!/^https:\/\//.test(oa.url||''))oa=null}}catch(e){}
  const nm=oa?(oa.name||'LINE OA ของศูนย์')+(oa.id?' ('+oa.id+')':''):'LINE OA ของศูนย์';
- if(qrShown){add('ลิงก์นี้เป็นเว็บสำรองค่ะ ถามน้องหยดน้ำได้ที่เว็บหลักหรือทาง LINE '+nm+' ตาม QR ด้านบนนะคะ','b');return}
+ if(qrShown){add('ตอนนี้ยังเชื่อมต่อไม่ได้ค่ะ ถามน้องหยดน้ำได้ที่เว็บหลักหรือทาง LINE '+nm+' ตาม QR ด้านบนนะคะ','b');return}
  qrShown=true;
- const d=add('ลิงก์นี้เป็นเว็บสำรอง แชตกับน้องหยดน้ำยังใช้ไม่ได้ค่ะ 🙏\nสแกน QR ด้วยมือถือ เพื่อถามทาง LINE '+nm+' หรือเปิดเว็บหลักของศูนย์ได้เลยค่ะ','b');
+ const d=add('ตอนนี้แชตบนลิงก์นี้ยังเชื่อมต่อเซิร์ฟเวอร์ของศูนย์ไม่ได้ค่ะ 🙏\nสแกน QR ด้วยมือถือ เพื่อถามทาง LINE '+nm+' หรือเปิดเว็บหลักของศูนย์ได้เลยค่ะ','b');
  const box=document.createElement('div');box.className='cbqr';d.appendChild(box);
  if(oa)box.appendChild(qrFig(oa.url,'เพิ่มเพื่อน LINE แล้วพิมพ์ถามได้เลย'));box.appendChild(qrFig(SITE,'เว็บหลัก (มีแชตน้องหยดน้ำ)'));
  LG.scrollTop=LG.scrollHeight}
 async function ask(q){q=(q||'').trim();if(!q||busy)return;add(q,'u');I.value='';
- if(remote){remoteHelp();return}
+ let ep='api/chat';
+ if(remote){ep=await chatEP();if(!ep){remoteHelp();return}}
  busy=true;F.querySelector('button').disabled=true;const w=add('น้องหยดน้ำกำลังคิด…','b');
- try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);const r=await fetch('api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,sid}),signal:ctl.signal});clearTimeout(tm);const j=await r.json();w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้')}
- catch(e){w.innerHTML=fmt('ขออภัยค่ะ เชื่อมต่อไม่ได้ ลองใหม่อีกครั้งนะคะ')}
+ try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,sid}),signal:ctl.signal});clearTimeout(tm);if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้')}
+ catch(e){if(remote){w.remove();epC={u:'',t:Date.now()};remoteHelp()}else w.innerHTML=fmt('ขออภัยค่ะ เชื่อมต่อไม่ได้ ลองใหม่อีกครั้งนะคะ')}
  finally{busy=false;F.querySelector('button').disabled=false;LG.scrollTop=LG.scrollHeight}}
 B.onclick=()=>{X.classList.toggle('on');if(X.classList.contains('on')){if(!greeted){greeted=true;add('สวัสดีค่ะ 💧 น้องหยดน้ำจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคมค่ะ ถามเรื่องน้ำ ฝน น้ำท่วม หรือกดปุ่มด้านล่างได้เลยค่ะ\n(ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784 ทันที)','b')}setTimeout(()=>I.focus(),50)}};
 document.getElementById('cbX').onclick=()=>X.classList.remove('on');
