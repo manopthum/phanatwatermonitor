@@ -394,6 +394,8 @@ function bbAlert(){const b=(typeof D!=='undefined'&&D&&D.bb)||{};if(b.p72==null&
  const key=Math.max(pb3,f24);const lv=key>=50?'crit':key>=30?'warn':key>=15?'watch':'ok';const q3=0.5*0.011574*pb3*408,qt=0.5*0.011574*pb3*474;
  const msg={crit:'ตัวเมืองเสี่ยงน้ำท่วม (เคยท่วม 0.5–1 ม. ที่ระดับนี้) · น้ำถึงเมืองใน 8–16 ชม.',warn:'เตรียมรับน้ำในเมืองภายใน 8–16 ชม. · คลองในเมืองใกล้เต็มตลิ่ง',watch:'เฝ้าระวัง · ต่ำกว่าเกณฑ์เตือน (30 มม./วัน)',ok:'ปกติ · ต่ำกว่าเกณฑ์เตือนมาก'}[lv];
  return {lv,pb3,f24,n2,q3,qt,msg,src:f24>pb3?'พยากรณ์ 24 ชม.':'ฝนเฉลี่ย 3 วัน'}}
+function bwInfo(){const _wl=(typeof D!=='undefined'&&D&&D.wl)||[],_g=c=>_wl.find(w=>w.c===c)||{},_cl=v=>Math.max(0,Math.min(1.5,v));const B=0.6*_cl(((+_g('BPK004').pct||0)-90)/30)+0.4*_cl(((+_g('BPK001').pct||0)-80)/20);const K=(typeof CALIB!=='undefined'&&CALIB&&CALIB.kbw!=null)?+CALIB.kbw:0.855;return {B,K}}
+function bwDen(zr){const {B,K}=bwInfo();const zt=FLM?FLM.zr[(FLM.places.find(p=>p.n==='ตัวเมืองพนัสนิคม')||{}).r??46]:9.6;const w=Math.max(0,Math.min(1,1-((zr??zt)-zt)/10));return Math.max(0.15,1-K*B*w)}
 function drainSlow(){const wl=(typeof D!=='undefined'&&D&&D.wl)||[];const g=c=>wl.find(w=>w.c===c);const b4=g('BPK004'),b1=g('BPK001'),tb=g('Kgt.19A');const R=[];if(b4&&b4.pct>=100)R.push(`แม่น้ำบางปะกงช่วงพนมสารคามยังล้นตลิ่ง (${fx(b4.pct,0)}%)`);if(b1&&b1.pct>=95)R.push(`ปากแม่น้ำบางปะกงสูง (${fx(b1.pct,0)}%)`);if(tb&&tb.pct>=80)R.push(`คลองหลวงที่ท่าบุญมีสูง (${fx(tb.pct,0)}% ของตลิ่ง)`);const S=[];if(b4&&b4.pct>=100)S.push('บางปะกงล้นตลิ่ง');if(b1&&b1.pct>=95)S.push('ปากบางปะกงสูง');if(tb&&tb.pct>=80)S.push('คลองหลวงสูง');return {slow:R.length>0,why:R.join(' และ '),short:S.join(', ')}}
 function fieldFc(at){const F=FIELD;if(!F||!F.t)return null;const t0=new Date(F.t).getTime();at=at||Date.now();const h=Math.max(0,(at-t0)/36e5);
  const back=drainSlow().slow;const tb=back?18:10;let tau=tb,rising=false,src='ค่าตั้งต้น';
@@ -444,9 +446,9 @@ function flDrawStation(cx){if(!flShow.t)return;const w=getWl('Kgt.19A');const pl
 function flDrawTB(cx,rows){if(!flShow.t)return;const s=FLM.K/2/FLZL();
  const L=[['ต.นาวังหิน',/นาวังหิน/,40,-70],['ต.นามะตูม',/นามะตูม/,45,15],['ต.หน้าพระธาตุ',/หน้าพระธาตุ/,-150,-150],['ต.ไร่หลักทอง',/ไร่หลักทอง/,45,-75],['วัดหลวง',/^วัดหลวง/,-60,-130]];
  const DS=drainSlow();const CAP={A:46,B:60};
- for(const [nm,re,dx,dy] of L){const r=rows.find(x=>re.test(x.n));const pl=FLM.places.find(p=>re.test(p.n));if(!r||!pl)continue;const cap=CAP[pl.ch]||45;const q=r.q;const pct=cap>0?q/cap*100:0;
-  const lv=pct>=100?'crit':pct>=80?'warn':DS.slow?'watch':'ok';const st=pct>=100?'ล้นตลิ่ง':pct>=80?'ใกล้เต็มตลิ่ง':DS.slow?'ระบายช้า (ปลายทางสูง)':'ปกติ';const c=TWC[lv];
-  const x=(pl.x+0.5)*FLM.K,y=(pl.y+0.5)*FLM.K;const t1=nm,t2=`${fx(q,q<1?2:0)} ลบ.ม./วิ · ${fx(pct,0)}% ความจุ`,t3=st;
+ for(const [nm,re,dx,dy] of L){const r=rows.find(x=>re.test(x.n));const pl=FLM.places.find(p=>re.test(p.n));if(!r||!pl)continue;const cap=CAP[pl.ch]||45;const q=r.q;const pct=cap>0?Math.min(q/cap*100/bwDen(FLM.zr[pl.r]),130):0;const fbz=2.5*(1-Math.pow(Math.min(pct,100)/100,0.6));
+  const lv=pct>=100?'crit':pct>=80?'warn':DS.slow?'watch':'ok';const st=pct>=100?'ล้นตลิ่ง (รวมน้ำหนุน)':(pct>=80?'ใกล้เต็มตลิ่ง':DS.slow?'ระบายช้า':'ปกติ')+' · ต่ำกว่าตลิ่ง ~'+Math.round(fbz*100/5)*5+' ซม.';const c=TWC[lv];
+  const x=(pl.x+0.5)*FLM.K,y=(pl.y+0.5)*FLM.K;const t1=nm,t2=`${fx(q,q<1?2:0)} ลบ.ม./วิ · ระดับ ${fx(pct,0)}% ตลิ่ง`,t3=st;
   cx.save();cx.font=`700 ${11.5*s}px system-ui,sans-serif`;const w1=cx.measureText(t1).width;cx.font=`600 ${10*s}px system-ui,sans-serif`;const w2=Math.max(cx.measureText(t2).width,cx.measureText(t3).width);const bw=Math.max(w1,w2)+12*s,bh=45*s,bx=x+dx*s,by=y+dy*s;
   cx.beginPath();cx.moveTo(x,y);cx.lineTo(dx<0?bx+bw:bx,by+bh/2);cx.lineWidth=1.5*s;cx.strokeStyle=c;cx.stroke();cx.fillStyle='rgba(255,255,255,.55)';cx.beginPath();cx.rect(bx,by,bw,bh);cx.fill();cx.stroke();
   cx.fillStyle=c;cx.font=`700 ${11.5*s}px system-ui,sans-serif`;cx.fillText(t1,bx+6*s,by+14*s);cx.font=`600 ${10*s}px system-ui,sans-serif`;cx.fillStyle='#333';cx.fillText(t2,bx+6*s,by+27*s);cx.fillStyle=c;cx.fillText(t3,bx+6*s,by+40*s);cx.restore()}}
