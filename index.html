@@ -323,7 +323,7 @@ function renderWN(){if(!$('wnPanel'))return;const w=WN;
  $('wnm').textContent=`อัปเดต ${thTime(w.u)}`+(w.quota?` · ดึงทุก ${w.quota.every_h} ชม. เพื่อไม่ให้เกินโควตา · ใช้วันนี้ ${w.quota.calls}/${w.quota.max} ครั้ง`:'')+(w.err?` · ${w.err}`:'');
  const k=[{s:s(pn.next24),l:'พนัสนิคม · ฝน 24 ชม. ข้างหน้า',v:fx(pn.next24,1),u:'มม.',n:`48 ชม. ${fx(pn.next48,1)} มม. · โอกาสฝนสูงสุด ${pn.pmax??'–'}%`},
  {s:s(bb.next24||0),l:'บ้านบึง · ฝน 24 ชม. ข้างหน้า',v:bb.next24==null?'–':fx(bb.next24,1),u:'มม.',n:bb.next48==null?'':`48 ชม. ${fx(bb.next48,1)} มม. · โอกาสฝนสูงสุด ${bb.pmax??'–'}%`},
- {s:s(bt.next24||0),l:'บ่อทอง · ฝน 24 ชม. ข้างหน้า',v:bt.next24==null?'–':fx(bt.next24,1),u:'มม.',n:bt.next48==null?'รอข้อมูลรอบถัดไป':`48 ชม. ${fx(bt.next48,1)} มม. · โอกาสฝนสูงสุด ${bt.pmax??'–'}%`},
+ {s:s(bt.next24||0),l:'บ่อทอง (รร.บ้านตลาดเนินหิน) · ฝน 24 ชม. ข้างหน้า',v:bt.next24==null?'–':fx(bt.next24,1),u:'มม.',n:(bt.next48==null?'รอข้อมูลรอบถัดไป':`48 ชม. ${fx(bt.next48,1)} มม. · โอกาสฝนสูงสุด ${bt.pmax??'–'}%`)+((D&&D.kl&&D.kl.g&&D.kl.g.r24!=null)?` · วัดได้ 24 ชม. ที่ผ่านมา ${fx(+D.kl.g.r24,1)} มม.`:'')},
  {s:s(pn.past24||0),l:'พนัสนิคม · ฝน 24 ชม. ที่ผ่านมา',v:pn.past24==null?'–':fx(pn.past24,1),u:'มม.',n:bb.past24==null?'':`บ้านบึง ${fx(bb.past24,1)} มม.`},
  {s:'ok',l:'เทียบ Open-Meteo (พนัสนิคม 24 ชม.)',v:om==null?'–':fx(om,1),u:'มม.',n:om==null?'':(Math.abs(om-pn.next24)<5?'สองแบบจำลองใกล้เคียงกัน':`ต่างกัน ${fx(Math.abs(om-pn.next24),1)} มม.`)}];
  $('wnk').innerHTML=k.map(x=>`<div class="kpi k-${x.s}"><div class="l">${esc(x.l)}</div><div class="v">${x.v}<small>${esc(x.u)}</small></div><div class="n">${esc(x.n)}</div></div>`).join('');
