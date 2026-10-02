@@ -84,6 +84,7 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 .mapview .wrap>*:not(#flPanel):not(#mvBar){display:none!important}.mapview #flTabs,.mapview #flCtl,.mapview #flShow,.mapview #flObsM,.mapview #flNow{display:none!important}.mapview .wrap{padding-block:10px 30px;gap:10px}.mapview #mvBar{display:flex!important}
 #cbBtn{position:fixed;right:18px;bottom:18px;z-index:900;border:0;border-radius:999px;padding:12px 18px;background:var(--water);color:#fff;font:600 15px var(--sans);box-shadow:0 6px 20px rgba(0,0,0,.3);cursor:pointer}
 #cbBox{position:fixed;right:18px;bottom:76px;z-index:901;width:min(380px,calc(100vw - 24px));height:min(560px,calc(100vh - 110px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden}
+.cbqr{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:6px 0 2px;white-space:normal}.cbqr figure{margin:0;flex:0 1 128px;text-align:center;font-size:12px}.cbqr .qb{background:#fff;border-radius:8px;padding:4px;width:120px;height:120px;margin:0 auto;box-sizing:content-box;line-height:0}.cbqr .qb svg{width:120px!important;height:120px!important;display:block}.cbqr figcaption{margin-top:5px;line-height:1.35}.cbqr a{word-break:break-all}
 #cbBox.on{display:flex}#cbHd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:600}
 #cbHd button{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer}
 #cbLog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
@@ -853,8 +854,61 @@ const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=t=>esc(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
 const add=(t,who)=>{const d=document.createElement('div');d.className='cbm '+who;d.innerHTML=fmt(t);LG.appendChild(d);LG.scrollTop=LG.scrollHeight;return d};
 let busy=false,greeted=false;
+let qrShown=false;
+function makeQR(text){
+ const EC=[0,[10,1,16,0,0],[16,1,28,0,0],[26,1,44,0,0],[18,2,32,0,0],[24,2,43,0,0],[16,4,27,0,0],[18,4,31,0,0],[22,2,38,2,39],[22,3,36,2,37],[26,4,43,1,44]];
+ const AL=[0,[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+ const data=Array.from(new TextEncoder().encode(text));let v=1,cap;
+ for(;v<=10;v++){const e=EC[v];cap=e[1]*e[2]+e[3]*e[4];if(4+(v<10?8:16)+data.length*8<=cap*8)break}
+ if(v>10)return null;
+ const bits=[];const put=(x,n)=>{for(let i=n-1;i>=0;i--)bits.push((x>>>i)&1)};
+ put(4,4);put(data.length,v<10?8:16);data.forEach(b=>put(b,8));put(0,Math.min(4,cap*8-bits.length));while(bits.length%8)bits.push(0);
+ const cw=[];for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=b<<1|bits[i+j];cw.push(b)}
+ for(let p=0xEC;cw.length<cap;p^=0xEC^0x11)cw.push(p);
+ const mul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x}return z};
+ const e=EC[v],ne=e[0];const dv=new Array(ne).fill(0);dv[ne-1]=1;let root=1;
+ for(let i=0;i<ne;i++){for(let j=0;j<ne;j++){dv[j]=mul(dv[j],root);if(j+1<ne)dv[j]^=dv[j+1]}root=mul(root,2)}
+ const blocks=[],ecs=[];let k=0;
+ for(let g=0;g<2;g++)for(let b=0;b<e[1+g*2];b++){const d=cw.slice(k,k+=e[2+g*2]);const r=new Array(ne).fill(0);
+  d.forEach(x=>{const f=x^r.shift();r.push(0);dv.forEach((c,i)=>r[i]^=mul(c,f))});blocks.push(d);ecs.push(r)}
+ const all=[];const mx=Math.max(...blocks.map(b=>b.length));
+ for(let i=0;i<mx;i++)blocks.forEach(b=>{if(i<b.length)all.push(b[i])});
+ for(let i=0;i<ne;i++)ecs.forEach(r=>all.push(r[i]));
+ const S=v*4+17;const M=[],F=[];for(let y=0;y<S;y++){M.push(new Array(S).fill(0));F.push(new Array(S).fill(0))}
+ const set=(x,y,d)=>{M[y][x]=d?1:0;F[y][x]=1};
+ for(let i=0;i<S;i++){set(6,i,i%2==0);set(i,6,i%2==0)}
+ [[3,3],[S-4,3],[3,S-4]].forEach(([x,y])=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const xx=x+dx,yy=y+dy,d=Math.max(Math.abs(dx),Math.abs(dy));if(xx>=0&&xx<S&&yy>=0&&yy<S)set(xx,yy,d!=2&&d!=4)}});
+ const A=AL[v],n=A.length;for(let i=0;i<n;i++)for(let j=0;j<n;j++){if((i==0&&j==0)||(i==0&&j==n-1)||(i==n-1&&j==0))continue;
+  for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)set(A[i]+dx,A[j]+dy,Math.max(Math.abs(dx),Math.abs(dy))!=1)}
+ const fmt=m=>{const d=m;let r=d;for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);const b=(d<<10|r)^0x5412,g=i=>(b>>>i)&1;
+  for(let i=0;i<=5;i++)set(8,i,g(i));set(8,7,g(6));set(8,8,g(7));set(7,8,g(8));for(let i=9;i<15;i++)set(14-i,8,g(i));
+  for(let i=0;i<8;i++)set(S-1-i,8,g(i));for(let i=8;i<15;i++)set(8,S-15+i,g(i));set(8,S-8,1)};
+ fmt(0);
+ if(v>=7){let r=v;for(let i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1F25);const b=v<<12|r;for(let i=0;i<18;i++){const t=(b>>>i)&1,a=S-11+i%3,c=Math.floor(i/3);set(a,c,t);set(c,a,t)}}
+ let i=0;for(let rt=S-1;rt>=1;rt-=2){if(rt==6)rt=5;for(let vt=0;vt<S;vt++)for(let j=0;j<2;j++){const x=rt-j,up=((rt+1)&2)==0,y=up?S-1-vt:vt;
+  if(!F[y][x]&&i<all.length*8){M[y][x]=(all[i>>>3]>>>(7-(i&7)))&1;i++}}}
+ const MK=[(x,y)=>(x+y)%2==0,(x,y)=>y%2==0,(x,y)=>x%3==0,(x,y)=>(x+y)%3==0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2==0,(x,y)=>x*y%2+x*y%3==0,(x,y)=>(x*y%2+x*y%3)%2==0,(x,y)=>((x+y)%2+x*y%3)%2==0];
+ const apply=m=>{for(let y=0;y<S;y++)for(let x=0;x<S;x++)if(!F[y][x]&&MK[m](x,y))M[y][x]^=1};
+ const pen=()=>{let p=0,dark=0;const line=g=>{let run=1;for(let i=1;i<=S;i++){if(i<S&&g(i)==g(i-1))run++;else{if(run>=5)p+=run-2;run=1}}
+   for(let i=0;i+10<S;i++){let s='';for(let j=0;j<11;j++)s+=g(i+j);if(s=='10111010000'||s=='00001011101')p+=40}};
+  for(let a=0;a<S;a++){line(i=>M[a][i]);line(i=>M[i][a])}
+  for(let y=0;y<S-1;y++)for(let x=0;x<S-1;x++){const c=M[y][x];if(c==M[y][x+1]&&c==M[y+1][x]&&c==M[y+1][x+1])p+=3}
+  for(let y=0;y<S;y++)for(let x=0;x<S;x++)dark+=M[y][x];p+=Math.floor(Math.abs(dark*20-S*S*10)/(S*S))*10;return p};
+ let best=0,bp=1e9;for(let m=0;m<8;m++){apply(m);fmt(m);const p=pen();if(p<bp){bp=p;best=m}apply(m)}
+ apply(best);fmt(best);return M}
+function qrFig(url,cap){const f=document.createElement('figure');let q='';try{const M=makeQR(url);if(M){const S=M.length;let p='';for(let y=0;y<S;y++)for(let x=0;x<S;x++)if(M[y][x])p+='M'+(x+4)+' '+(y+4)+'h1v1h-1z';q='<svg viewBox="0 0 '+(S+8)+' '+(S+8)+'" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="'+p+'" fill="#000"/></svg>'}}catch(e){}
+ f.innerHTML=(q?'<div class="qb" role="img" aria-label="QR code '+esc(cap)+'">'+q+'</div>':'')+'<figcaption>'+esc(cap)+'<br><a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(url.replace(/^https?:\/\//,''))+'</a></figcaption>';return f}
+async function remoteHelp(){
+ let oa=null;try{const r=await fetch('data/line_oa.json?'+Date.now(),{cache:'no-store'});if(r.ok){oa=await r.json();if(!oa||!/^https:\/\//.test(oa.url||''))oa=null}}catch(e){}
+ const nm=oa?(oa.name||'LINE OA ของศูนย์')+(oa.id?' ('+oa.id+')':''):'LINE OA ของศูนย์';
+ if(qrShown){add('ลิงก์นี้เป็นเว็บสำรองค่ะ ถามน้องหยดน้ำได้ที่เว็บหลักหรือทาง LINE '+nm+' ตาม QR ด้านบนนะคะ','b');return}
+ qrShown=true;
+ const d=add('ลิงก์นี้เป็นเว็บสำรอง แชตกับน้องหยดน้ำยังใช้ไม่ได้ค่ะ 🙏\nสแกน QR ด้วยมือถือ เพื่อถามทาง LINE '+nm+' หรือเปิดเว็บหลักของศูนย์ได้เลยค่ะ','b');
+ const box=document.createElement('div');box.className='cbqr';d.appendChild(box);
+ if(oa)box.appendChild(qrFig(oa.url,'เพิ่มเพื่อน LINE แล้วพิมพ์ถามได้เลย'));box.appendChild(qrFig(SITE,'เว็บหลัก (มีแชตน้องหยดน้ำ)'));
+ LG.scrollTop=LG.scrollHeight}
 async function ask(q){q=(q||'').trim();if(!q||busy)return;add(q,'u');I.value='';
- if(remote){add('แชตกับน้องหยดน้ำใช้ได้บนเว็บหลักของศูนย์ค่ะ เปิดที่ '+SITE+' หรือถามผ่าน LINE OA ของศูนย์ได้เลยค่ะ','b');return}
+ if(remote){remoteHelp();return}
  busy=true;F.querySelector('button').disabled=true;const w=add('น้องหยดน้ำกำลังคิด…','b');
  try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);const r=await fetch('api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,sid}),signal:ctl.signal});clearTimeout(tm);const j=await r.json();w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้')}
  catch(e){w.innerHTML=fmt('ขออภัยค่ะ เชื่อมต่อไม่ได้ ลองใหม่อีกครั้งนะคะ')}
