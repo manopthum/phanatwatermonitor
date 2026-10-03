@@ -253,7 +253,10 @@ const RESROLE={'คลองหลวง รัชชโลทร':'ต้นน
 let D=null,H=[],charts={};try{Object.defineProperty(window,'__D',{get:()=>D,configurable:true})}catch(e){};
 function thTime(iso){try{return new Date(iso).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return iso}}
 function fresh(){const el=$('fresh');if(!D){return}const age=(Date.now()-new Date(D.u))/60000;el.className='fresh '+(age<=90?'live':'stale');
-el.querySelector('span').textContent=(age<=90?'อัปเดต ':'ข้อมูลเก่า · อัปเดตล่าสุด ')+thTime(D.u)+' ('+(age<60?Math.max(0,Math.round(age))+' นาทีที่แล้ว':Math.round(age/60)+' ชม.ที่แล้ว')+')';}
+let tx=(age<=90?'อัปเดต ':'ข้อมูลเก่า · อัปเดตล่าสุด ')+thTime(D.u)+' ('+(age<60?Math.max(0,Math.round(age))+' นาทีที่แล้ว':Math.round(age/60)+' ชม.ที่แล้ว')+')';
+const SL={wl:'ระดับน้ำ',rn:'ฝน',res_l:'อ่างขนาดใหญ่',res_m:'อ่างขนาดกลาง',meteo:'พยากรณ์อากาศ'},st=D.stale||{},ks=Object.keys(st).filter(k=>SL[k]&&st[k]);
+if(ks.length){const t0=ks.map(k=>st[k]).sort()[0];tx+=' · ⚠️ '+ks.map(k=>SL[k]).join('/')+' ยังเป็นข้อมูล '+thTime(t0)+' (แหล่งข้อมูลต้นทางขัดข้อง)';if((Date.now()-new Date(t0))/60000>90)el.className='fresh stale'}
+el.querySelector('span').textContent=tx;}
 function getRes(n){return (D.res||[]).find(r=>r.n===n)}
 function getWl(c){return (D.wl||[]).find(r=>r.c===c)}
 function fc24(){return (D.hr||[]).slice(12,36).reduce((a,r)=>a+(r[1]||0),0)}
