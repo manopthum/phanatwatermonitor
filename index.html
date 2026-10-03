@@ -96,6 +96,7 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 .cbAv{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none;background:#DDF0F6}#cbBtn{display:inline-flex;align-items:center;gap:8px}#cbBtn .cbAv{width:34px;height:34px;margin:-6px 0 -6px -8px;border:2px solid rgba(255,255,255,.85)}.cbHn{display:inline-flex;align-items:center;gap:8px}
 .cbForm{max-width:94%!important;white-space:normal!important}.cbForm .cbStep{margin:8px 0 4px;font-size:13px;color:var(--muted)}.cbCh{display:flex;flex-wrap:wrap;gap:6px}.cbc,.cbLoc,.cbAct button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 11px;font:500 13px var(--sans);cursor:pointer}.cbc.on{background:var(--water);border-color:var(--water);color:#fff}.cbLs{font-size:12.5px;margin-top:4px;color:var(--muted)}.cbLs a{color:var(--water)}.cbIn{width:100%;box-sizing:border-box;margin-top:6px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:14px var(--sans);resize:vertical}.cbAct{display:flex;gap:8px;margin-top:10px}.cbAct .cbSend{background:var(--water);border-color:var(--water);color:#fff;font-weight:600}.cbNote{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45}.cbTel{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}.cbTel a{display:block;text-align:center;padding:9px;border-radius:10px;background:var(--critbg);color:var(--crit);font-weight:600;text-decoration:none;border:1px solid var(--crit)}#cbQ .cbUrg{border-color:var(--crit);color:var(--crit)}.cbForm button:disabled,.cbForm input:disabled,.cbForm textarea:disabled{opacity:.55;cursor:default}
 .lineb{background:#06C755!important;border-color:#06C755!important;color:#fff!important;text-decoration:none;font-weight:600;display:inline-flex;align-items:center}.lineb:hover{filter:brightness(1.07)}
+#pushBtn.on{border-color:var(--water);color:var(--water)}#instTip .tb{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font:inherit;cursor:pointer;position:static}
 #cbBox.on{display:flex}#cbHd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:600}
 #cbHd button{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer}
 #cbLog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
@@ -114,7 +115,7 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 <div class="wrap">
 <div class="top">
 <div><h1>ศูนย์ติดตามสถานการณ์น้ำพนัสนิคม</h1><div class="eyebrow" style="margin-top:4px">อ.พนัสนิคม · จ.ชลบุรี · ลุ่มน้ำคลองหลวง–บางปะกง</div></div>
-<div class="topr"><div id="clk" class="clk" aria-live="off"><b id="clkT">--:--:--</b><span id="clkD"></span></div><div id="fresh" class="fresh"><i></i><span>กำลังโหลดข้อมูล…</span></div><a id="lineBtn" class="fsb lineb" href="https://line.me/R/ti/p/%40991zcebg" target="_blank" rel="noopener" title="เพิ่มเพื่อน LINE OA ของศูนย์ รับแจ้งเตือนน้ำท่วมและถามน้องหยดน้ำ">💬 เพิ่มเพื่อน LINE</a><button id="instBtn" class="fsb" type="button" hidden title="ติดตั้งเป็นแอปบนมือถือ/คอมพิวเตอร์">📲 ติดตั้งแอป</button><button id="themeBtn" class="fsb" type="button" title="สลับโหมดสว่าง/มืด">☀ โหมดสว่าง</button><button id="fsBtn" class="fsb" type="button">⛶ เต็มจอ</button></div>
+<div class="topr"><div id="clk" class="clk" aria-live="off"><b id="clkT">--:--:--</b><span id="clkD"></span></div><div id="fresh" class="fresh"><i></i><span>กำลังโหลดข้อมูล…</span></div><button id="pushBtn" class="fsb" type="button" title="แจ้งเตือนบนมือถือ/คอมพิวเตอร์เมื่อสถานการณ์น้ำเปลี่ยน">🔔 รับแจ้งเตือน</button><a id="lineBtn" class="fsb lineb" href="https://line.me/R/ti/p/%40991zcebg" target="_blank" rel="noopener" title="เพิ่มเพื่อน LINE OA ของศูนย์ รับแจ้งเตือนน้ำท่วมและถามน้องหยดน้ำ">💬 เพิ่มเพื่อน LINE</a><button id="instBtn" class="fsb" type="button" hidden title="ติดตั้งเป็นแอปบนมือถือ/คอมพิวเตอร์">📲 ติดตั้งแอป</button><button id="themeBtn" class="fsb" type="button" title="สลับโหมดสว่าง/มืด">☀ โหมดสว่าง</button><button id="fsBtn" class="fsb" type="button">⛶ เต็มจอ</button></div>
 </div>
 <div id="fieldAlert" style="display:none;margin-bottom:12px;padding:12px 16px;border-radius:10px;background:#c62828;color:#fff;font-weight:600;line-height:1.5"></div>
 <div id="banner" class="banner"><span class="lv s-watch">กำลังโหลด</span><div class="hd">กำลังอ่านข้อมูลล่าสุด</div><div class="ds">ข้อมูลอัปเดตอัตโนมัติทุก 1 ชั่วโมง</div></div>
@@ -858,6 +859,44 @@ sat();setInterval(sat,5*60000);
 </script>
 <script>(function(){const b=document.getElementById('themeBtn');if(!b)return;const R=document.documentElement;const set=t=>{R.setAttribute('data-theme',t);b.textContent=t==='dark'?'☀ โหมดสว่าง':'☾ โหมดมืด';try{localStorage.setItem('pn-theme',t)}catch(e){}};b.textContent=R.getAttribute('data-theme')==='dark'?'☀ โหมดสว่าง':'☾ โหมดมืด';b.addEventListener('click',()=>set(R.getAttribute('data-theme')==='dark'?'light':'dark'))})();</script>
 <script>(function(){var a=document.getElementById("lineBtn");if(!a||location.protocol==="file:")return;fetch("data/line_oa.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&/^https:\/\/(line\.me|lin\.ee)\//.test(j.url||"")){a.href=j.url;if(j.id)a.title+=" ("+j.id+")"}}).catch(function(){})})();</script>
+<script>(function(){
+var B=document.getElementById('pushBtn');if(!B)return;
+var GH='https://manopthum.github.io/phanatwatermonitor/';
+var remote=/github\.io$/.test(location.hostname);
+var standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+var ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var sup=window.isSecureContext&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+function tip(h,btn,fn){var T=document.getElementById('instTip');if(!T)return;T.innerHTML=h+(btn?'<br><button type="button" class="tb">'+btn+'</button>':'')+'<button type="button" aria-label="ปิด">×</button>';T.hidden=false;
+ var bs=T.querySelectorAll('button');bs[bs.length-1].onclick=function(){T.hidden=true};if(btn)bs[0].onclick=function(){T.hidden=true;fn()}}
+function ui(on){B.textContent=on?'🔔 เปิดแจ้งเตือนแล้ว':'🔔 รับแจ้งเตือน';B.classList.toggle('on',!!on)}
+function u8(k){k=k.replace(/-/g,'+').replace(/_/g,'/');k+='='.repeat((4-k.length%4)%4);var r=atob(k),a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a}
+async function ep(){if(!remote)return 'api/push';var m=location.hostname.match(/^([^.]+)\.github\.io$/),seg=location.pathname.split('/').filter(Boolean)[0];
+ var src=[];if(m&&seg)src.push('https://raw.githubusercontent.com/'+m[1]+'/'+seg+'/main/data/chat_ep.json?'+Date.now());src.push('data/chat_ep.json?'+Date.now());
+ for(var i=0;i<src.length;i++){try{var r=await fetch(src[i],{cache:'no-store'});if(r.ok){var j=await r.json();if(/^https:\/\/[^\s]+\/api\/chat$/.test(j.url||''))return j.url.replace(/\/api\/chat$/,'/api/push')}}catch(e){}}return ''}
+async function post(op,sub){var u=await ep();if(!u)throw new Error('offline');var r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:op,sub:sub})});return r.json()}
+async function cur(){try{var reg=await navigator.serviceWorker.ready;return [reg,await reg.pushManager.getSubscription()]}catch(e){return [null,null]}}
+if(sup){cur().then(function(x){var s=x[1];ui(s&&Notification.permission==='granted');
+ if(s&&Notification.permission==='granted'){var last=0;try{last=+localStorage.getItem('pn-push-sync')||0}catch(e){}
+  if(Date.now()-last>864e5)post('sub',s.toJSON()).then(function(j){if(j&&j.ok)try{localStorage.setItem('pn-push-sync',Date.now())}catch(e){}}).catch(function(){})}})}
+B.onclick=async function(){
+ if(!window.isSecureContext){tip('การแจ้งเตือนบนเครื่องใช้ได้ในแอปหรือลิงก์สำรอง (https) ค่ะ เปิด <a href="'+GH+'" target="_blank" rel="noopener">'+GH.replace('https://','')+'</a> แล้วกด "🔔 รับแจ้งเตือน"');return}
+ if(ios&&!standalone){tip('บน iPhone/iPad ต้องติดตั้งแอปก่อนค่ะ: เปิดใน Safari → กดแชร์ ⬆︎ → <b>"เพิ่มไปยังหน้าจอโฮม"</b> แล้วเปิดแอปจากไอคอน และกด "🔔 รับแจ้งเตือน" อีกครั้ง (iOS 16.4 ขึ้นไป)');return}
+ if(!sup){tip('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนค่ะ ลองใช้ Chrome, Edge หรือ Firefox หรือเพิ่มเพื่อน LINE ของศูนย์แทน');return}
+ B.disabled=true;
+ try{var x=await cur(),reg=x[0],s=x[1];
+  if(s&&Notification.permission==='granted'){B.disabled=false;tip('เปิดรับแจ้งเตือนอยู่แล้วค่ะ จะแจ้งเมื่อระดับเตือนภัยหรือข้อมูลเตือนภัยเปลี่ยน','ปิดการแจ้งเตือน',async function(){try{await post('unsub',s.toJSON())}catch(e){}try{await s.unsubscribe()}catch(e){}ui(false)});return}
+  var perm=await Notification.requestPermission();
+  if(perm!=='granted'){tip('ยังไม่ได้อนุญาตการแจ้งเตือนค่ะ เปิดได้ที่การตั้งค่าเว็บไซต์ของเบราว์เซอร์ (ไอคอนแม่กุญแจ/ⓘ หน้าที่อยู่เว็บ) → การแจ้งเตือน → อนุญาต');return}
+  var k=(await (await fetch('data/push_pub.json?'+Date.now(),{cache:'no-store'})).json()).k;
+  if(s)try{await s.unsubscribe()}catch(e){}
+  s=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(k)});
+  var j=await post('sub',s.toJSON());
+  if(!j||!j.ok){try{await s.unsubscribe()}catch(e){}tip((j&&j.msg)||'สมัครไม่สำเร็จค่ะ ลองใหม่อีกครั้ง');return}
+  try{localStorage.setItem('pn-push-sync',Date.now())}catch(e){}
+  ui(true);tip('✅ เปิดรับแจ้งเตือนแล้วค่ะ จะมีข้อความทดสอบเด้งขึ้นภายในไม่กี่วินาที<br>ต่อไปจะแจ้งเมื่อระดับเตือนภัยหรือข้อมูลเตือนภัยเปลี่ยน แม้ปิดแอปอยู่')}
+ catch(e){tip(String(e&&e.message)==='offline'?'ตอนนี้เชื่อมต่อเซิร์ฟเวอร์ของศูนย์ไม่ได้ค่ะ ลองใหม่ภายหลัง หรือเพิ่มเพื่อน LINE เพื่อรับแจ้งเตือนแทน':'สมัครรับแจ้งเตือนไม่สำเร็จค่ะ ลองใหม่อีกครั้ง')}
+ finally{B.disabled=false}};
+})();</script>
 <div id="instTip" role="status" hidden></div>
 <script>(function(){
 var B=document.getElementById('instBtn'),T=document.getElementById('instTip'),dp=null;
