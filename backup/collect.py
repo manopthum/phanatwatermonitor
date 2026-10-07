@@ -15,19 +15,26 @@ STALE_H = float(os.environ.get("STALE_H", "2"))
 FORCE = os.environ.get("FORCE", "") in ("1", "true", "True")
 
 
+EVERY_H = float(os.environ.get("EVERY_H", "0.9"))   # ตอนระบบสำรองทำงานแทน ดึงใหม่ทุก ~1 ชม.
+
+
 def age_h():
+    """คืน (อายุข้อมูล ชม., มาจากระบบสำรองหรือไม่)"""
     try:
         with open(os.path.join(ROOT, "data", "latest.json"), encoding="utf-8") as fh:
-            u = json.load(fh)["u"]
-        return (datetime.now(timezone.utc) - datetime.fromisoformat(u.replace("Z", "+00:00"))).total_seconds() / 3600
+            d = json.load(fh)
+        a = (datetime.now(timezone.utc) - datetime.fromisoformat(d["u"].replace("Z", "+00:00"))).total_seconds() / 3600
+        return a, d.get("via") == "backup"
     except Exception:
-        return 1e9
+        return 1e9, False
 
 
 def main():
-    a = age_h()
-    if a < STALE_H and not FORCE:
-        print(f"เซิร์ฟเวอร์ที่บ้านยังทำงาน (ข้อมูลอายุ {a:.1f} ชม.) — ไม่ต้องทำอะไร")
+    a, by_backup = age_h()
+    need = EVERY_H if by_backup else STALE_H
+    if a < need and not FORCE:
+        who = "ระบบสำรองเพิ่งดึงไป" if by_backup else "เซิร์ฟเวอร์ที่บ้านยังทำงาน"
+        print(f"{who} (ข้อมูลอายุ {a:.1f} ชม.) — ไม่ต้องทำอะไร")
         return 0
     print(f"ข้อมูลอายุ {a:.1f} ชม. → ดึงข้อมูลสำรอง")
     import server as S
