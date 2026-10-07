@@ -1,0 +1,57 @@
+name: ดึงข้อมูลสำรอง
+
+on:
+  schedule:
+    - cron: "35 * * * *"     # ทุกชั่วโมง นาทีที่ 35 (เซิร์ฟเวอร์บ้านอัปเดตนาทีที่ 5)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "บังคับดึงแม้เซิร์ฟเวอร์บ้านยังทำงาน (ทดสอบ)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: ดึงข้อมูล (เฉพาะเมื่อเซิร์ฟเวอร์บ้านหยุด)
+        id: run
+        env:
+          FORCE: ${{ inputs.force }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          if [ ! -f server.py ]; then echo "ยังไม่มี server.py ใน repo (รอเซิร์ฟเวอร์บ้านส่งขึ้นมา)"; exit 0; fi
+          python backup/collect.py
+      - name: บันทึกขึ้น repo
+        if: steps.run.outputs.changed == '1'
+        run: |
+          git config user.name "panat-backup[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json data/history.json data/src_cache.json data/sat.json data/sat_himawari.jpg data/sat_modis.jpg 2>/dev/null || true
+          git diff --cached --quiet && { echo "ไม่มีอะไรเปลี่ยน"; exit 0; }
+          git commit -m "ข้อมูลสำรอง $(TZ=Asia/Bangkok date '+%Y-%m-%d %H:%M')"
+          if ! git push origin HEAD:main; then
+            git fetch --depth 5 origin main
+            if git rebase origin/main; then git push origin HEAD:main
+            else git rebase --abort; echo "เซิร์ฟเวอร์บ้านส่งข้อมูลเข้ามาพอดี — ข้ามรอบนี้"; fi
+          fi
+      - name: สั่งสร้างหน้าเว็บใหม่
+        if: steps.run.outputs.changed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || true
