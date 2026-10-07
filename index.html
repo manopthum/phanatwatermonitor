@@ -994,7 +994,7 @@ B.onclick=function(){
 <button id="cbBtn" type="button" aria-label="แชตกับน้องหยดน้ำ"><img src="icons/chat-96.png" alt="" class="cbAv">ถามน้องหยดน้ำ</button>
 <div id="cbBox" role="dialog" aria-label="แชตกับน้องหยดน้ำ"><div id="cbHd"><span class="cbHn"><img src="icons/chat-96.png" alt="" class="cbAv">น้องหยดน้ำ · ผู้ช่วย AI</span><button type="button" id="cbX" aria-label="ปิด">×</button></div>
 <div id="cbLog" aria-live="polite"></div>
-<div id="cbQ"><button type="button" data-act="help" class="cbUrg">🆘 ขอความช่วยเหลือ</button><button type="button" data-act="rep">📍 แจ้งน้ำท่วม</button><button type="button">สถานการณ์</button><button type="button">ระดับน้ำ</button><button type="button">อ่างเก็บน้ำ</button><button type="button">ฝน</button><button type="button">น้ำเท่าไรถึงท่วม</button><button type="button" data-sat="1">🛰 ภาพถ่ายดาวเทียม</button></div>
+<div id="cbQ"><button type="button" class="cbUrg">🆘 ขอความช่วยเหลือ</button><button type="button">สถานการณ์</button><button type="button">📍 แจ้งน้ำท่วม</button><button type="button">🚗 เส้นทาง</button><button type="button">ระดับน้ำ</button><button type="button">อ่างเก็บน้ำ</button><button type="button">ฝน</button><button type="button">🗺 แผนที่</button><button type="button">🛰 ภาพถ่ายดาวเทียม</button><button type="button">📞 เบอร์ฉุกเฉิน</button></div>
 <form id="cbF"><input id="cbI" maxlength="500" placeholder="พิมพ์คำถามเรื่องน้ำ ฝน น้ำท่วม…" autocomplete="off"><button type="submit">ส่ง</button></form></div>
 <script>(function(){
 const B=document.getElementById('cbBtn'),X=document.getElementById('cbBox'),LG=document.getElementById('cbLog'),F=document.getElementById('cbF'),I=document.getElementById('cbI');
@@ -1070,56 +1070,74 @@ async function remoteHelp(){
  LG.scrollTop=LG.scrollHeight}
 const DEPTHS=['ไม่ท่วม','ข้อเท้า','หน้าแข้ง','เข่า','เอว','สูงกว่าเอว'],HTYPES=['ติดอยู่/ต้องการอพยพ','เจ็บป่วย/บาดเจ็บ','ผู้สูงอายุ/ผู้ป่วยติดเตียง','อาหาร/น้ำดื่ม','อื่น ๆ'],HPEOPLE=['1 คน','2-3 คน','4-6 คน','มากกว่า 6 คน'];
 const TELS='<div class="cbTel"><a href="tel:1669">📞 1669 เจ็บป่วยฉุกเฉิน</a><a href="tel:1784">📞 1784 สายด่วน ปภ.</a><a href="tel:038461144">📞 038-461-144 เทศบาลฯ</a></div>';
-function chips(list,name){return '<div class="cbCh" data-n="'+name+'">'+list.map(x=>'<button type="button" class="cbc" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>'}
-function bindChips(f){f.querySelectorAll('.cbCh').forEach(g=>g.querySelectorAll('.cbc').forEach(b=>b.onclick=()=>{g.querySelectorAll('.cbc').forEach(x=>x.classList.remove('on'));b.classList.add('on');g.dataset.val=b.dataset.v}))}
-function locBind(f,cb){const b=f.querySelector('.cbLoc'),st=f.querySelector('.cbLs');b.onclick=()=>{
- if(!window.isSecureContext||!navigator.geolocation){st.innerHTML='หน้านี้ขอตำแหน่งไม่ได้ (เว็บ http) — ใช้แอปหรือลิงก์สำรอง https ได้ค่ะ';return}
- st.textContent='กำลังหาตำแหน่ง…';b.disabled=true;
- navigator.geolocation.getCurrentPosition(p=>{b.disabled=false;const la=+p.coords.latitude.toFixed(5),lo=+p.coords.longitude.toFixed(5),ac=Math.round(p.coords.accuracy||0);cb(la,lo);
-  st.innerHTML='✅ ได้ตำแหน่งแล้ว (คลาดเคลื่อน ±'+ac+' ม.) <a href="https://maps.google.com/?q='+la+','+lo+'" target="_blank" rel="noopener">ดูบนแผนที่</a>'},
- e=>{b.disabled=false;st.textContent=e.code===1?'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง — เปิดสิทธิ์ตำแหน่งในการตั้งค่าเบราว์เซอร์แล้วลองใหม่ค่ะ':'หาตำแหน่งไม่สำเร็จ ลองใหม่ในที่โล่งค่ะ'},{enableHighAccuracy:true,timeout:20000,maximumAge:60000})}}
+// ---- โฟลว์สนทนาแบบเดียวกับ LINE: ขอความช่วยเหลือ · แจ้งน้ำท่วม · เส้นทาง ----
+let FLOW=null;const MENU=['ขอความช่วยเหลือ','สถานการณ์','แจ้งน้ำท่วม','เส้นทาง','ระดับน้ำ','อ่างเก็บน้ำ','ฝน','แผนที่','ภาพถ่ายดาวเทียม','เบอร์ฉุกเฉิน'];
+const canLoc=()=>window.isSecureContext&&!!navigator.geolocation;
+function qr(d,list,loc){const w=document.createElement('div');w.className='cbCh cbQr';
+ if(loc){const b=document.createElement('button');b.type='button';b.className='cbc cbLoc';b.textContent='📍 '+loc;b.onclick=()=>getLoc(b,loc);w.appendChild(b)}
+ for(const x of list.concat(['ยกเลิก'])){const b=document.createElement('button');b.type='button';b.className='cbc';b.textContent=x;b.onclick=()=>ask(x);w.appendChild(b)}
+ d.appendChild(w);LG.scrollTop=LG.scrollHeight}
+function botQ(t,list,loc,html){const d=add(t,'b');if(html){const h=document.createElement('div');h.innerHTML=html;d.appendChild(h)}if(loc&&!canLoc()){const n=document.createElement('div');n.className='cbNote';n.textContent='หน้านี้ขอตำแหน่งจากเครื่องไม่ได้ (เว็บ http) — '+(FLOW&&FLOW.k==='rep'?'แจ้งน้ำท่วมผ่าน LINE ของศูนย์ หรือเปิดเว็บแอป/ลิงก์สำรอง (https) แทนได้ค่ะ':'พิมพ์ชื่อสถานที่หรือที่อยู่แทนได้ค่ะ');d.appendChild(n);loc=null}qr(d,list||[],loc);return d}
+function lockQr(){LG.querySelectorAll('.cbQr button').forEach(b=>b.disabled=true)}
+function getLoc(b,label){if(!canLoc())return;b.disabled=true;const o=b.textContent;b.textContent='กำลังหาตำแหน่ง…';
+ navigator.geolocation.getCurrentPosition(p=>{const la=+p.coords.latitude.toFixed(5),lo=+p.coords.longitude.toFixed(5),ac=Math.round(p.coords.accuracy||0);b.textContent=o;lockQr();
+  const u=add('📍 '+label+' (คลาดเคลื่อน ±'+ac+' ม.)','u');u.innerHTML+=' <a href="https://maps.google.com/?q='+la+','+lo+'" target="_blank" rel="noopener">ดูบนแผนที่</a>';flowLoc(la,lo)},
+ e=>{b.disabled=false;b.textContent=o;add(e.code===1?'ไม่ได้รับอนุญาตให้ใช้ตำแหน่งค่ะ เปิดสิทธิ์ตำแหน่งในการตั้งค่าเบราว์เซอร์แล้วลองใหม่ หรือพิมพ์ชื่อสถานที่แทน':'หาตำแหน่งไม่สำเร็จ ลองใหม่ในที่โล่ง หรือพิมพ์ชื่อสถานที่แทนค่ะ','b')},{enableHighAccuracy:true,timeout:20000,maximumAge:60000})}
 async function postForm(path,body){let base=remote?await chatEP():'api/chat';if(!base)return null;
  const go=u=>postChat(u.replace(/\/api\/chat$|api\/chat$/,m=>m.replace('chat',path)),body);
  try{return await go(base)}catch(e){if(!remote)throw e;const b2=await chatEP(true);if(!b2||b2===base)throw e;return await go(b2)}}
-function formBox(html){const d=add('','b');d.classList.add('cbForm');d.innerHTML=html;LG.scrollTop=LG.scrollHeight;return d}
-function done(f,j){f.querySelectorAll('button,input,textarea').forEach(x=>x.disabled=true);add(j&&j.msg||'ขออภัยค่ะ ส่งไม่สำเร็จ ถ้าเร่งด่วนโทร 1669 หรือ 1784 ทันที','b')}
-function repForm(){let la=null,lo=null;const f=formBox('<b>📍 แจ้งน้ำท่วมจุดที่คุณอยู่</b><div class="cbStep">1) ตำแหน่ง (ต้องอยู่ที่จุดนั้น)</div><button type="button" class="cbLoc">📍 ใช้ตำแหน่งปัจจุบัน</button><div class="cbLs"></div>'+
- '<div class="cbStep">2) น้ำสูงประมาณ (วัดจากคนยืน)</div>'+chips(DEPTHS,'d')+'<div class="cbAct"><button type="button" class="cbSend">ส่งการแจ้ง</button><button type="button" class="cbCancel">ยกเลิก</button></div>'+
- '<div class="cbNote">จุดที่แจ้งจะขึ้นบนแผนที่ในแดชบอร์ด โดยไม่แสดงชื่อผู้แจ้ง · ⚠️ ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784 ทันที</div>');
- bindChips(f);locBind(f,(a,b)=>{la=a;lo=b});f.querySelector('.cbCancel').onclick=()=>{f.querySelectorAll('button').forEach(x=>x.disabled=true);add('ยกเลิกการแจ้งแล้วค่ะ','b')};
- f.querySelector('.cbSend').onclick=async()=>{const d=f.querySelector('[data-n=d]').dataset.val;if(la==null){f.querySelector('.cbLs').textContent='กรุณากด "ใช้ตำแหน่งปัจจุบัน" ก่อนค่ะ';return}if(!d){add('กรุณาเลือกความสูงของน้ำค่ะ','b');return}
-  const s=f.querySelector('.cbSend');s.disabled=true;s.textContent='กำลังส่ง…';let j=null;try{j=await postForm('report',{lat:la,lon:lo,d,sid})}catch(e){}
-  if(j===null&&remote){done(f,{msg:'ตอนนี้ส่งการแจ้งไม่ได้ค่ะ แจ้งผ่าน LINE ของศูนย์แทนได้ (พิมพ์ "แจ้งน้ำท่วม" ใน LINE) ⚠️ ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784'});remoteHelp();return}
-  if(j&&!j.ok){s.disabled=false;s.textContent='ส่งการแจ้ง';add(j.msg,'b');return}done(f,j)}}
-function helpForm(){let la=null,lo=null;const f=formBox('<b>🚨 ถ้ามีอันตรายถึงชีวิต โทรทันที</b>'+TELS+
- '<div class="cbStep">ถ้าต้องการให้ส่งเรื่องต่อผู้ดูแลศูนย์ กรอกด้านล่างค่ะ</div><div class="cbStep">ประเภทความช่วยเหลือ</div>'+chips(HTYPES,'type')+
- '<div class="cbStep">จำนวนคน</div>'+chips(HPEOPLE,'people')+
- '<div class="cbStep">ตำแหน่ง</div><button type="button" class="cbLoc">📍 ใช้ตำแหน่งปัจจุบัน</button><div class="cbLs"></div><textarea class="cbIn" rows="2" maxlength="200" placeholder="ที่อยู่ / จุดสังเกต เช่น ซอย บ้านเลขที่ ใกล้วัด…"></textarea>'+
- '<div class="cbStep">เบอร์โทรที่ติดต่อกลับได้ (ผู้ดูแลเท่านั้นที่เห็น)</div><input class="cbIn cbPh" type="tel" inputmode="tel" maxlength="16" placeholder="08xxxxxxxx" autocomplete="tel">'+
- '<div class="cbAct"><button type="button" class="cbSend">ส่งคำขอ</button><button type="button" class="cbCancel">ยกเลิก</button></div>'+
- '<div class="cbNote">ศูนย์นี้ไม่ใช่หน่วยกู้ภัย จะส่งต่อข้อมูลให้ผู้ดูแลประสานงาน ไม่สามารถรับประกันเวลาช่วยเหลือได้</div>');
- bindChips(f);locBind(f,(a,b)=>{la=a;lo=b});f.querySelector('.cbCancel').onclick=()=>{f.querySelectorAll('button,input,textarea').forEach(x=>x.disabled=true);add('ยกเลิกคำขอแล้วค่ะ ถ้าเร่งด่วนโทร 1669 หรือ 1784 ได้ตลอดค่ะ','b')};
- f.querySelector('.cbSend').onclick=async()=>{const type=f.querySelector('[data-n=type]').dataset.val,people=f.querySelector('[data-n=people]').dataset.val,addr=f.querySelector('textarea').value.trim(),phone=f.querySelector('.cbPh').value.trim();
-  if(!type){add('กรุณาเลือกประเภทความช่วยเหลือค่ะ','b');return}if(la==null&&addr.length<5){add('กรุณากด "ใช้ตำแหน่งปัจจุบัน" หรือพิมพ์ที่อยู่/จุดสังเกตค่ะ','b');return}
-  if(phone.replace(/[^0-9+]/g,'').length<9){add('กรุณาใส่เบอร์โทรที่ติดต่อกลับได้ค่ะ','b');return}
-  const s=f.querySelector('.cbSend');s.disabled=true;s.textContent='กำลังส่ง…';let j=null;try{j=await postForm('help',{type,people:people||'-',lat:la,lon:lo,addr,phone,sid})}catch(e){}
-  if(j===null){done(f,{msg:'⚠️ ตอนนี้ส่งคำขอไปที่ศูนย์ไม่ได้ค่ะ กรุณาโทร 1669 หรือ 1784 ทันที หรือขอความช่วยเหลือผ่าน LINE ของศูนย์ (พิมพ์ "ขอความช่วยเหลือ")'});if(remote)remoteHelp();return}
-  if(!j.ok){s.disabled=false;s.textContent='ส่งคำขอ';add(j.msg,'b');return}done(f,j)}}
+const HTXT='🚨 ถ้ามีอันตรายถึงชีวิต (น้ำขึ้นเร็ว ติดอยู่บนหลังคา หมดสติ) โทรทันที:\n• 1669 เจ็บป่วยฉุกเฉิน\n• 1784 สายด่วน ปภ.\n• 038-461-144 เทศบาลเมืองพนัสนิคม\n\nถ้าต้องการให้ส่งเรื่องต่อผู้ดูแลศูนย์ เลือกประเภทความช่วยเหลือด้านล่างค่ะ\n(ศูนย์นี้ไม่ใช่หน่วยกู้ภัย จะส่งต่อข้อมูลให้ผู้ดูแลประสานงาน ไม่สามารถรับประกันเวลาช่วยเหลือได้)';
+function flowStart(k){FLOW={k,step:k==='help'?'type':k==='rep'?'loc':'from',d:{},t:Date.now()};
+ if(k==='help')botQ(HTXT,HTYPES,null,TELS);
+ else if(k==='rep')botQ('💧 แจ้งน้ำท่วมจุดที่คุณอยู่\n1) กดปุ่ม "ส่งตำแหน่ง" ด้านล่าง (ต้องอยู่ที่จุดนั้น)\n2) เลือกความสูงของน้ำ\nข้อมูลจะขึ้นเป็นจุดบนแผนที่ในแดชบอร์ด โดยไม่แสดงชื่อผู้แจ้งค่ะ\n⚠️ ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784 ทันที',[],'ส่งตำแหน่ง');
+ else botQ('🚗 หาเส้นทางเลี่ยงจุดน้ำท่วม\n1) กด "ต้นทาง" เพื่อใช้ตำแหน่งปัจจุบัน หรือพิมพ์ชื่อสถานที่ต้นทาง\n2) ส่งปลายทาง (ใช้ตำแหน่ง หรือพิมพ์ชื่อสถานที่)\nน้องหยดน้ำจะหาเส้นทางที่ผ่านจุดน้ำท่วมน้อยที่สุดให้ค่ะ',[],'ต้นทาง (ตำแหน่งปัจจุบัน)')}
+function flowLoc(la,lo){const F=FLOW;if(!F)return;F.t=Date.now();
+ if(F.k==='help'&&F.step==='loc'){F.d.lat=la;F.d.lon=lo;F.step='people';botQ('มีกี่คนที่ต้องการความช่วยเหลือคะ',HPEOPLE)}
+ else if(F.k==='rep'&&F.step==='loc'){F.d.lat=la;F.d.lon=lo;F.step='depth';botQ('ได้รับตำแหน่งแล้วค่ะ น้ำสูงประมาณเท่าไหร่คะ (วัดจากคนยืน)',DEPTHS.map(n=>n==='ไม่ท่วม'?'น้ำไม่ท่วม':'น้ำ'+n))}
+ else if(F.k==='route'&&F.step==='from'){F.d.a={lat:la,lon:lo};F.step='to';botQ('ได้ต้นทางแล้วค่ะ ✅\nกด "ปลายทาง" เพื่อใช้ตำแหน่งปัจจุบัน หรือพิมพ์ชื่อสถานที่ เช่น โรงพยาบาลพนัสนิคม',[],'ปลายทาง (ตำแหน่งปัจจุบัน)')}
+ else if(F.k==='route'&&F.step==='to'){F.d.b={lat:la,lon:lo};routeGo()}}
+async function sendFlow(path,body,okFn){const w=add('กำลังส่ง…','b');let j=null;try{j=await postForm(path,body)}catch(e){}
+ if(j===null){w.innerHTML=fmt(path==='help'?'⚠️ ตอนนี้ส่งคำขอไปที่ศูนย์ไม่ได้ค่ะ กรุณาโทร 1669 หรือ 1784 ทันที หรือขอความช่วยเหลือผ่าน LINE ของศูนย์ (พิมพ์ "ขอความช่วยเหลือ")':path==='report'?'ตอนนี้ส่งการแจ้งไม่ได้ค่ะ แจ้งผ่าน LINE ของศูนย์แทนได้ (พิมพ์ "แจ้งน้ำท่วม" ใน LINE) ⚠️ ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784':'ขออภัยค่ะ ตอนนี้ระบบหาเส้นทางไม่ตอบ ลองใหม่อีกครั้งในไม่กี่นาทีนะคะ');if(remote)remoteHelp();FLOW=null;return}
+ w.innerHTML=fmt(j.msg||'');if(j.ok){FLOW=null;if(okFn)okFn()}else if(j.step&&FLOW){FLOW.step=j.step;qr(w,[],j.step==='from'?'ต้นทาง (ตำแหน่งปัจจุบัน)':'ปลายทาง (ตำแหน่งปัจจุบัน)')}else if(path==='help'&&FLOW&&FLOW.step==='phone')qr(w,['ข้าม'])}
+function routeGo(){const F=FLOW;F.step='wait';const w=add('🔎 กำลังหาเส้นทางที่เลี่ยงจุดน้ำท่วม (ใช้เวลาราว 10–20 วินาที)…','b');
+ (async()=>{let j=null;try{j=await postForm('route',Object.assign({sid},F.d))}catch(e){}w.remove();
+  if(j===null){add('ขออภัยค่ะ ตอนนี้ระบบหาเส้นทางไม่ตอบ ลองใหม่อีกครั้งในไม่กี่นาที หรือดูจุดน้ำท่วมบนแผนที่ได้ค่ะ','b');if(remote)remoteHelp();FLOW=null;return}
+  const d=add(j.msg||'','b');if(j.ok){FLOW=null;return}
+  if(j.step&&FLOW){FLOW.step=j.step;if(j.step==='from'){delete F.d.a;delete F.d.aq}else{delete F.d.b;delete F.d.bq}qr(d,[],j.step==='from'?'ต้นทาง (ตำแหน่งปัจจุบัน)':'ปลายทาง (ตำแหน่งปัจจุบัน)')}else FLOW=null})()}
+function flowText(q){const F=FLOW;if(!F)return false;if(Date.now()-F.t>(F.k==='help'?1800e3:900e3)){FLOW=null;return false}F.t=Date.now();
+ if(q==='ยกเลิก'){lockQr();FLOW=null;add(F.k==='help'?'ยกเลิกคำขอแล้วค่ะ ถ้าเร่งด่วนโทร 1669 หรือ 1784 ได้ตลอดค่ะ':F.k==='rep'?'ยกเลิกการแจ้งแล้วค่ะ':'ยกเลิกการหาเส้นทางแล้วค่ะ','b');return true}
+ if(MENU.includes(q)){FLOW=null;return false}   // เปลี่ยนไปเรื่องอื่น (เหมือนใน LINE)
+ lockQr();
+ if(F.k==='help'){
+  if(F.step==='type'){F.d.type=q.slice(0,60);F.step='loc';botQ(canLoc()?'กดปุ่ม "ส่งตำแหน่ง" เพื่อบอกจุดที่ต้องการความช่วยเหลือ หรือพิมพ์ที่อยู่/จุดสังเกต (ซอย บ้านเลขที่ ใกล้วัด…) ค่ะ':'พิมพ์ที่อยู่หรือจุดสังเกตของจุดที่ต้องการความช่วยเหลือค่ะ (ซอย บ้านเลขที่ ใกล้วัด…)',[],'ส่งตำแหน่ง');return true}
+  if(F.step==='loc'){if(q.length<5){botQ('กรุณากดปุ่ม "ส่งตำแหน่ง" หรือพิมพ์ที่อยู่/จุดสังเกตให้ละเอียดขึ้นค่ะ',[],'ส่งตำแหน่ง');return true}F.d.addr=q.slice(0,200);F.step='people';botQ('มีกี่คนที่ต้องการความช่วยเหลือคะ',HPEOPLE);return true}
+  if(F.step==='people'){F.d.people=q.slice(0,30);F.step='phone';botQ('พิมพ์เบอร์โทรที่ติดต่อกลับได้ (ผู้ดูแลศูนย์เท่านั้นที่เห็น) หรือกด "ข้าม" ค่ะ',['ข้าม']);I.setAttribute('inputmode','tel');return true}
+  if(F.step==='phone'){I.removeAttribute('inputmode');const ph=q.replace(/[^0-9+]/g,'');if(q!=='ข้าม'&&!(ph.length>=9&&ph.length<=12)){botQ('เบอร์โทรไม่ถูกต้องค่ะ ลองพิมพ์ใหม่ (เช่น 0812345678) หรือกด "ข้าม"',['ข้าม']);return true}
+   F.d.phone=q==='ข้าม'?'':ph;sendFlow('help',Object.assign({sid},F.d));return true}}
+ if(F.k==='rep'){
+  if(F.step==='depth'){const n=q.replace(/^น้ำ/,'');if(!DEPTHS.includes(n)){botQ('เลือกความสูงของน้ำจากปุ่มด้านล่างค่ะ',DEPTHS.map(n=>n==='ไม่ท่วม'?'น้ำไม่ท่วม':'น้ำ'+n));return true}
+   sendFlow('report',{lat:F.d.lat,lon:F.d.lon,d:n,sid});return true}
+  botQ(canLoc()?'กรุณากดปุ่ม "ส่งตำแหน่ง" ค่ะ (หรือกด ยกเลิก)':'หน้านี้ขอตำแหน่งไม่ได้ค่ะ แจ้งน้ำท่วมผ่าน LINE ของศูนย์ (พิมพ์ "แจ้งน้ำท่วม") หรือเปิดเว็บแอป/ลิงก์สำรอง (https) แทนได้ค่ะ',[],'ส่งตำแหน่ง');if(!canLoc())FLOW=null;return true}
+ if(F.k==='route'){
+  if(F.step==='from'){F.d.aq=q.slice(0,80);F.step='to';botQ('ได้ต้นทาง "'+q.slice(0,40)+'" แล้วค่ะ ✅\nกด "ปลายทาง" เพื่อใช้ตำแหน่งปัจจุบัน หรือพิมพ์ชื่อสถานที่ เช่น โรงพยาบาลพนัสนิคม',[],'ปลายทาง (ตำแหน่งปัจจุบัน)');return true}
+  if(F.step==='to'){F.d.bq=q.slice(0,80);routeGo();return true}
+  if(F.step==='wait'){add('กำลังคำนวณเส้นทางอยู่ค่ะ รอสักครู่นะคะ','b');return true}}
+ return false}
 async function postChat(ep,q){const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),60000);try{const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(typeof q==='object'?q:{q,sid}),signal:ctl.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(tm)}}
 async function ask(q){q=(q||'').trim();if(!q||busy)return;add(q,'u');I.value='';
- const qn=q.replace(/\s+/g,'');if(/^(ขอความช่วยเหลือ|ช่วยด้วย|ขอความช่วยเหลือด่วน)$/.test(qn)){helpForm();return}if(/^(แจ้งน้ำท่วม|แจ้งน้ำ|แจ้งเหตุ|รายงานน้ำท่วม)$/.test(qn)){repForm();return}
+ if(flowText(q))return;const qn=q.replace(/\s+/g,'');if(/^(ขอความช่วยเหลือ|ช่วยด้วย|ขอความช่วยเหลือด่วน)$/.test(qn)){flowStart('help');return}if(/^(แจ้งน้ำท่วม|แจ้งน้ำ|แจ้งเหตุ|รายงานน้ำท่วม)$/.test(qn)){flowStart('rep');return}if(/^(เส้นทาง|ขอเส้นทาง|หาเส้นทาง|นำทาง|เส้นทางเลี่ยงน้ำท่วม|เส้นทางปลอดภัย|ไปทางไหนดี)$/.test(qn)){flowStart('route');return}if(qn==='ภาพถ่ายดาวเทียม'&&!remote){satOpen(true);return}if(qn==='เบอร์ฉุกเฉิน'){const d=add('📞 เบอร์ติดต่อ (กดโทรได้เลย)','b');const h=document.createElement('div');h.innerHTML=TELS+'<div class="cbTel"><a href="tel:191">📞 191 แจ้งเหตุด่วนเหตุร้าย</a></div>';d.appendChild(h);LG.scrollTop=LG.scrollHeight;return}
  let ep='api/chat';
  if(remote){ep=await chatEP();if(!ep){remoteHelp();return}}
  busy=true;F.querySelector('button').disabled=true;const w=add('น้องหยดน้ำกำลังคิด…','b');
  try{let j;try{j=await postChat(ep,q)}catch(e){if(!remote)throw e;const e2=await chatEP(true);if(!e2||e2===ep)throw e;j=await postChat(e2,q)}w.innerHTML=fmt(j.a||'ขออภัยค่ะ ตอนนี้ตอบไม่ได้');if(isLineQ(q))lineQR(w)}
  catch(e){if(remote){w.remove();epC={u:'',t:Date.now()};remoteHelp()}else w.innerHTML=fmt('ขออภัยค่ะ เชื่อมต่อไม่ได้ ลองใหม่อีกครั้งนะคะ')}
  finally{busy=false;F.querySelector('button').disabled=false;LG.scrollTop=LG.scrollHeight}}
-B.onclick=()=>{X.classList.toggle('on');if(X.classList.contains('on')){if(!greeted){greeted=true;add('สวัสดีค่ะ 💧 น้องหยดน้ำจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคมค่ะ ถามเรื่องน้ำ ฝน น้ำท่วม หรือกดปุ่มด้านล่างได้เลยค่ะ\n(ถ้าอยู่ในอันตราย โทร 1669 หรือ 1784 ทันที)','b')}setTimeout(()=>I.focus(),50)}};
+B.onclick=()=>{X.classList.toggle('on');if(X.classList.contains('on')){if(!greeted){greeted=true;add('สวัสดีค่ะ 💧 น้องหยดน้ำ จากศูนย์ติดตามสถานการณ์น้ำพนัสนิคมค่ะ\nถามเรื่องน้ำ ฝน น้ำท่วม พิมพ์มาได้เลย หรือกดปุ่มด้านล่าง:\n• ขอความช่วยเหลือ — ส่งเรื่องต่อผู้ดูแลศูนย์ (เร่งด่วนโทร 1669/1784)\n• สถานการณ์ — สรุปสถานการณ์น้ำล่าสุด\n• แจ้งน้ำท่วม — ส่งตำแหน่งและความสูงน้ำจุดที่คุณอยู่\n• เส้นทาง — หาเส้นทางเลี่ยงจุดน้ำท่วม\n• ระดับน้ำ — คลองหลวง บางปะกง\n• อ่างเก็บน้ำ\n• ฝน — ฝนวัดได้และพยากรณ์\n• ภาพถ่ายดาวเทียม — ภาพเมฆและพื้นที่น้ำขังล่าสุด\n• แผนที่ — แผนที่พื้นที่เสี่ยงน้ำท่วม\n• เบอร์ฉุกเฉิน\n(ข้อมูลอัตโนมัติ ไม่ใช่ประกาศทางราชการ)','b')}setTimeout(()=>I.focus(),50)}};
 document.getElementById('cbX').onclick=()=>X.classList.remove('on');
 F.onsubmit=e=>{e.preventDefault();ask(I.value)};
-function satOpen(){add('ภาพถ่ายดาวเทียม','u');const u=location.pathname+'?view=sat';const d=add('🛰 เปิดหน้าภาพดาวเทียมล่าสุดให้แล้วค่ะ (Himawari ภาพเมฆล่าสุด · MODIS ภาพรายวัน · ซูมเข้าเพื่อดูชื่อตำบล)\n','b');const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';a.textContent='เปิดหน้าภาพดาวเทียม';d.appendChild(a);
+function satOpen(asked){if(!asked)add('ภาพถ่ายดาวเทียม','u');const u=location.pathname+'?view=sat';const d=add('🛰 เปิดหน้าภาพดาวเทียมล่าสุดให้แล้วค่ะ (Himawari ภาพเมฆล่าสุด · MODIS ภาพรายวัน · ซูมเข้าเพื่อดูชื่อตำบล)\n','b');const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';a.textContent='เปิดหน้าภาพดาวเทียม';d.appendChild(a);
  if(document.documentElement.classList.contains('satview'))return;const w=window.open(u,'_blank','noopener');if(!w){const p=document.getElementById('satPanel');if(p){X.classList.remove('on');p.scrollIntoView({behavior:'smooth',block:'start'})}}}
-document.querySelectorAll('#cbQ button').forEach(b=>b.onclick=()=>b.dataset.sat?satOpen():b.dataset.act?(add(b.textContent.replace(/^\S+\s/,''),'u'),b.dataset.act==='help'?helpForm():repForm()):ask(b.textContent));
+document.querySelectorAll('#cbQ button').forEach(b=>b.onclick=()=>ask(b.textContent.replace(/^[^\u0E00-\u0E7Fa-zA-Z0-9]+\s*/,'')));
 })();</script>
 </body>
 </html>
