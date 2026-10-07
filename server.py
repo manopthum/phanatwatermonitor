@@ -1358,7 +1358,7 @@ GH_FILES = ["index.html", "vendor/chart.umd.js", "data/latest.json", "data/histo
             "data/line_oa.json", "manifest.webmanifest", "sw.js", "icons/icon-192.png", "icons/icon-512.png",
             "icons/icon-maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-64.png", "icons/chat-96.png",
             "data/chat_ep.json", "data/push_pub.json", "data/roads.json", "data/roads_local.json",
-            "server.py"]   # server.py: ให้ระบบดึงข้อมูลสำรองบน GitHub Actions (backup/collect.py) ใช้โค้ดชุดเดียวกัน · ไม่มีคีย์ในไฟล์นี้
+            "data/src_cache.json", "server.py"]   # src_cache.json: ค่าล่าสุดของแต่ละแหล่ง ให้ระบบสำรองใช้ตอนแหล่งข้อมูลล่ม · server.py: ให้ระบบดึงข้อมูลสำรองบน GitHub Actions (backup/collect.py) ใช้โค้ดชุดเดียวกัน · ไม่มีคีย์ในไฟล์นี้
 
 
 def gh_repo():
