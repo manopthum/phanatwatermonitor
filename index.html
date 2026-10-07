@@ -637,7 +637,10 @@ function flDrawReports(cx){if(!flShow.r)return 0;const its=[...((WARN&&WARN.item
  const lr=((typeof REPS!=='undefined'&&Array.isArray(REPS))?REPS:[]).filter(x=>x.lat&&x.lon&&(Date.now()-new Date(x.t))/36e5<=12);const DC=d=>d<0.1?'#43a047':d<0.3?'#fbc02d':d<0.5?'#fb8c00':d<0.8?'#e53935':'#6a1b9a';
  for(const x of lr){const [px,py]=flLL(+x.lat,+x.lon);cx.beginPath();cx.arc(px,py,7*U,0,Math.PI*2);cx.fillStyle=DC(+x.d||0);cx.fill();cx.lineWidth=2*U;cx.strokeStyle='#fff';cx.stroke();cx.font=`700 ${10.5*U}px system-ui,sans-serif`;cx.lineWidth=3*U;cx.strokeStyle='rgba(255,255,255,.9)';cx.strokeText(x.lv||'',px+9*U,py+4*U);cx.fillStyle='#1a237e';cx.fillText(x.lv||'',px+9*U,py+4*U)}
  cx.restore();return its.length+lr.length}
-let REPS=null;
+let REPS=null,REP_LOCAL=[];
+// จุดที่ผู้ใช้เพิ่งแจ้งจากแชต: แสดงบนแผนที่ทันที จนกว่าข้อมูลจากเซิร์ฟเวอร์จะมีจุดนั้น
+function repMerge(arr){const sv=(Array.isArray(arr)?arr:[]).filter(x=>!x.local);REP_LOCAL=REP_LOCAL.filter(l=>Date.now()-new Date(l.t)<90*60000&&!sv.some(x=>Math.abs(x.lat-l.lat)<0.0003&&Math.abs(x.lon-l.lon)<0.0003&&x.lv===l.lv));return sv.concat(REP_LOCAL)}
+window.__reps=()=>({REPS,REP_LOCAL,m:repMerge});window.repLocal=(la,lo,n)=>{const v={'ไม่ท่วม':0,'ข้อเท้า':0.15,'หน้าแข้ง':0.35,'เข่า':0.6,'เอว':0.95,'สูงกว่าเอว':1.3}[n];REP_LOCAL.push({id:'local'+Date.now(),t:new Date().toISOString(),lat:la,lon:lo,d:v,lv:n,src:'web',local:1});REPS=repMerge(REPS);try{if(typeof D!=='undefined'&&D)renderFL()}catch(e){}};
 // น้ำล้นคลองในเขตเทศบาล (คลองที่ไม่อยู่ในร่องน้ำของแบบจำลองความสูงภูมิประเทศ): เมื่อคลองเกินความจุ กระจายระดับน้ำที่ล้นตลิ่งไปยังพื้นที่ต่ำริมคลอง
 function flTownOverflow(dep,w,h,ZA){const tw=new Uint8Array(w*h);if(typeof TWR==='undefined'||!TWR||(typeof fieldOn==='function'&&fieldOn()))return tw;const K=FLM.K,R=5;
  const L=[[FLTOWN.e,1],[FLTOWN.km,2],[FLTOWN.s.slice(103),0],[FLTOWN.hk,3],[FLTOWN.hkd,3],[FLROUTE.p.slice(44),3]];
@@ -806,13 +809,15 @@ async function load(){
  try{HELP=await getJSON('data/help.json');}catch(e){HELP=null;}renderHelp();
  try{WARN=await getJSON('data/warn.json');}catch(e){WARN=null;}renderWarn();
  try{CANAL=await getJSON('data/canal_obs.json');}catch(e){CANAL=null;}try{CALIB=await getJSON('data/calib.json');}catch(e){CALIB=null;}try{const ko=await getJSON('data/kl_obs.json');const ch=JSON.stringify(ko)!==JSON.stringify(KLO);KLO=ko;if(ch&&D){try{render()}catch(e){}}}catch(e){KLO=null;}try{FIELD=await getJSON('data/field.json');}catch(e){FIELD=null;}renderFieldAlert();if(D){try{renderTown()}catch(e){}}
- try{REPS=await getJSON('data/reports.json');}catch(e){REPS=null;}try{OBS=await getJSON('data/gistda_flood.json');}catch(e){OBS=null;}if(D)renderFL();
+ try{REPS=repMerge(await getJSON('data/reports.json'));}catch(e){REPS=repMerge(null);}try{OBS=await getJSON('data/gistda_flood.json');}catch(e){OBS=null;}if(D)renderFL();
 }
 window.__redraw=()=>{if(D){drawCharts();renderWN();renderKL();}};
 let REND_OK=false,LAST_OK=0,LOADING=false;const PAGE_T0=Date.now();
 async function safeLoad(){if(LOADING)return;LOADING=true;try{await load()}catch(e){console.error('load',e)}finally{LOADING=false}}
 safeLoad();
 setInterval(safeLoad,5*60000);
+// จุดแจ้งน้ำท่วมจากประชาชน: เช็กทุก 1 นาที วาดแผนที่ใหม่เฉพาะเมื่อมีจุดเปลี่ยน
+setInterval(async()=>{if(document.hidden||LOADING)return;try{const r=repMerge(await getJSON('data/reports.json'));if(JSON.stringify(r)!==JSON.stringify(REPS)){REPS=r;if(typeof D!=='undefined'&&D)renderFL()}}catch(e){}},60000);
 // จอทีวี/Android box ที่เปิดค้างไว้นาน: โหลดข้อมูลใหม่เมื่อกลับมาแสดงผลหรือเน็ตกลับมา และรีเฟรชทั้งหน้าทุก 2 ชม. (กันหน่วยความจำเต็ม/ค้าง)
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)safeLoad()});
 window.addEventListener('online',()=>safeLoad());
@@ -1116,7 +1121,7 @@ function flowText(q){const F=FLOW;if(!F)return false;if(Date.now()-F.t>(F.k==='h
    F.d.phone=q==='ข้าม'?'':ph;sendFlow('help',Object.assign({sid},F.d));return true}}
  if(F.k==='rep'){
   if(F.step==='depth'){const n=q.replace(/^น้ำ/,'');if(!DEPTHS.includes(n)){botQ('เลือกความสูงของน้ำจากปุ่มด้านล่างค่ะ',DEPTHS.map(n=>n==='ไม่ท่วม'?'น้ำไม่ท่วม':'น้ำ'+n));return true}
-   sendFlow('report',{lat:F.d.lat,lon:F.d.lon,d:n,sid});return true}
+   {const la=F.d.lat,lo=F.d.lon;sendFlow('report',{lat:la,lon:lo,d:n,sid},()=>{try{if(window.repLocal){window.repLocal(la,lo,n);add('📍 จุดที่คุณแจ้งขึ้นบนแผนที่พื้นที่เสี่ยงในหน้านี้แล้วค่ะ คนอื่นจะเห็นภายใน 1–3 นาที','b')}}catch(e){}})}return true}
   botQ(canLoc()?'กรุณากดปุ่ม "ส่งตำแหน่ง" ค่ะ (หรือกด ยกเลิก)':'หน้านี้ขอตำแหน่งไม่ได้ค่ะ แจ้งน้ำท่วมผ่าน LINE ของศูนย์ (พิมพ์ "แจ้งน้ำท่วม") หรือเปิดเว็บแอป/ลิงก์สำรอง (https) แทนได้ค่ะ',[],'ส่งตำแหน่ง');if(!canLoc())FLOW=null;return true}
  if(F.k==='route'){
   if(F.step==='from'){F.d.aq=q.slice(0,80);F.step='to';botQ('ได้ต้นทาง "'+q.slice(0,40)+'" แล้วค่ะ ✅\nกด "ปลายทาง" เพื่อใช้ตำแหน่งปัจจุบัน หรือพิมพ์ชื่อสถานที่ เช่น โรงพยาบาลพนัสนิคม',[],'ปลายทาง (ตำแหน่งปัจจุบัน)');return true}
