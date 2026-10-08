@@ -1086,15 +1086,23 @@ async function sayServer(t,btn){const tok=++sayTok;const ac=getAC();if(btn){btn.
   const ab=await new Promise((ok,no)=>{const p=ac.decodeAudioData(buf.slice(0),ok,no);if(p&&p.then)p.then(ok,no)});if(tok!==sayTok)return;
   const s=ac.createBufferSource();s.buffer=ab;s.connect(ac.destination);s.onended=()=>{if(acSrc===s)acSrc=null;sayOff(btn)};acSrc=s;if(btn)btn.textContent='⏹';s.start(0)}
  catch(e){sayOff(btn);if(tok===sayTok)add('ขออภัยค่ะ ฟังเสียงภาษาไทยไม่ได้ตอนนี้ ('+(e.message||'ผิดพลาด')+') · ถ้าอยากให้เครื่องอ่านเองโดยไม่ต้องรอ ให้ติดตั้งเสียงภาษาไทย: Samsung ตั้งค่า › การจัดการทั่วไป › ข้อความเป็นคำพูด (ค้นคำว่า "ข้อความเป็นคำพูด" หรือ Text-to-speech ในการตั้งค่า) › เลือก "บริการเสียงพูดโดย Google" › ⚙️ › ติดตั้งข้อมูลเสียง › ไทย · Android อื่น ค้นคำว่า Text-to-speech ในการตั้งค่า · iPhone ตั้งค่า › การช่วยการเข้าถึง › เนื้อหาที่พูด › เสียง › ไทย','b',1)}}
+const isSamsungBr=/SamsungBrowser/i.test(navigator.userAgent);
 function say(t,btn,auto){sayStop();try{SS&&SS.resume()}catch(e){}const x=sayClean(t);if(!x)return;pickV();
  const nv=SS?(SS.getVoices()||[]).length:0;
- // ไม่มีเสียงไทยแน่ ๆ (มีรายการเสียงแต่ไม่มีไทย) หรือเบราว์เซอร์ไม่มีระบบเสียง → เสียงจากเซิร์ฟเวอร์ (เฉพาะกดปุ่ม)
- if(!SS||(!thV&&nv>0)){if(auto){autoNote();return}return sayServer(x,btn)}
- // มีเสียงไทย หรือเครื่องไม่บอกรายการเสียง (Android บางรุ่น) → ลองเสียงเครื่องก่อน ถ้าไม่เริ่มพูดใน 2.5 วิ ค่อยใช้เสียงเซิร์ฟเวอร์
- const tok=++sayTok;let started=false;const parts=x.match(/[^,]{1,170}(,|$)|.{1,170}/g)||[x];if(btn){btn.classList.add('on');btn.textContent='⏹'}
- parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p);u.lang=(thV&&thV.lang)||'th-TH';if(thV)u.voice=thV;u.rate=1.0;u.onstart=()=>{started=true};if(i===parts.length-1)u.onend=()=>sayOff(btn);u.onerror=ev=>{if(i===parts.length-1||!started)sayOff(btn)};SS.speak(u)});
- setTimeout(()=>{if(started||tok!==sayTok)return;try{SS.cancel()}catch(e){}sayOff(btn);if(auto)autoNote();else sayServer(x,btn)},2500)}
-function autoNote(){if(autoNoteSaid)return;autoNoteSaid=true;add('ตอนนี้เบราว์เซอร์ยังไม่ยอมให้อ่านออกเสียงอัตโนมัติค่ะ 🔇 ลองกดปุ่ม 🔊 ใต้คำตอบหนึ่งครั้ง (ถ้าได้ยินเสียงไทยแล้ว การอ่านอัตโนมัติมักจะใช้ได้ต่อ) · ถ้ายังไม่ได้ ให้ปิดเว็บแอปแล้วเปิดใหม่หลังติดตั้งเสียงไทย','b',1)}
+ // มีรายการเสียงแต่ไม่มีภาษาไทย หรือไม่มีระบบเสียง → กดปุ่มใช้เสียงเซิร์ฟเวอร์ / อัตโนมัติแจ้งเหตุผล
+ if(!SS||(!thV&&nv>0)){if(auto){autoNote(SS?'no-th':'no-tts',nv);return}return sayServer(x,btn)}
+ // มีเสียงไทย หรือเครื่องไม่บอกรายการเสียง (Samsung/Android บางรุ่น) → ใช้เสียงเครื่อง ดูผลจาก onerror/speaking (onstart บาง Android ไม่ส่ง)
+ const tok=++sayTok;let ok=false,err='';const parts=x.match(/[^,]{1,170}(,|$)|.{1,170}/g)||[x];if(btn){btn.classList.add('on');btn.textContent='⏹'}
+ parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p);u.lang=(thV&&thV.lang)||'th-TH';if(thV)u.voice=thV;u.rate=1.0;u.onstart=()=>{ok=true};
+  u.onend=()=>{ok=true;if(i===parts.length-1)sayOff(btn)};
+  u.onerror=ev=>{const e=(ev&&ev.error)||'error';if(e==='interrupted'||e==='canceled'||tok!==sayTok)return;if(ok){sayOff(btn);return}if(err)return;err=e;sayOff(btn);try{SS.cancel()}catch(_){}if(auto)autoNote('err:'+e,nv);else sayServer(x,btn)};SS.speak(u)});
+ setTimeout(()=>{if(ok||err||tok!==sayTok)return;let busy=false;try{busy=SS.speaking||SS.pending}catch(_){}if(busy&&!auto)return;if(busy)return;
+  try{SS.cancel()}catch(_){}sayOff(btn);if(auto)autoNote('timeout',nv);else sayServer(x,btn)},7000)}
+function autoNote(why,nv){if(autoNoteSaid)return;autoNoteSaid=true;
+ const tip=isSamsungBr?'เว็บแอปนี้ติดตั้งจาก Samsung Internet ซึ่งอ่านออกเสียงภาษาไทยไม่ได้ ให้เปิดลิงก์ด้วย Chrome แล้วติดตั้งเว็บแอปจาก Chrome (เมนู ⋮ › เพิ่มลงในหน้าจอหลัก) แทนค่ะ':
+  why==='no-th'?'เบราว์เซอร์ยังมองไม่เห็นเสียงภาษาไทยที่ติดตั้ง ให้ตั้ง "บริการเสียงพูดโดย Google" เป็นกลไกหลัก ตั้งภาษาเป็นไทย แล้วปิดเว็บแอปและ Chrome ให้หมด (ปัดออกจากแอปล่าสุด) ก่อนเปิดใหม่ค่ะ':
+  'ลองกดปุ่ม 🔊 ใต้คำตอบหนึ่งครั้ง ถ้าได้ยินเสียงไทยแล้ว การอ่านอัตโนมัติจะใช้ได้ต่อค่ะ';
+ add('อ่านออกเสียงอัตโนมัติไม่ได้ 🔇 '+tip+' · ระหว่างนี้กดปุ่ม 🔊 ใต้คำตอบเพื่อฟังเสียงภาษาไทยจากระบบได้ค่ะ (รหัส: '+why+', เสียง '+(nv||0)+(thV?', '+thV.name:'')+(isSamsungBr?', SamsungBrowser':'')+')','b',1)}
 function spk(d,t){const b=document.createElement('button');b.type='button';b.className='cbSay';b.textContent='🔊';b.title='ฟังเสียง';b.setAttribute('aria-label','ฟังเสียงคำตอบนี้');if(!canSay)b.style.display='none';
  b.onclick=()=>{if(b.classList.contains('on')){sayTok++;sayStop()}else say(t,b)};d.appendChild(b);if(autoSpk&&canSay)say(t,b,true)};
 let busy=false,greeted=false;
