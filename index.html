@@ -1030,17 +1030,22 @@ const fmt=t=>esc(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank
 const add=(t,who)=>{const d=document.createElement('div');d.className='cbm '+who;d.innerHTML=fmt(t);LG.appendChild(d);if(who==='b'&&t&&!/กำลังคิด|กำลังส่ง|กำลังหาเส้นทาง/.test(t))spk(d,t);LG.scrollTop=LG.scrollHeight;return d}
 // ---- น้องหยดน้ำพูดได้: อ่านออกเสียงด้วยเสียงภาษาไทยของเครื่อง (ฟรี) + พูดถามด้วยไมค์ ----
 const SS=window.speechSynthesis;let thV=null,autoSpk=false;try{autoSpk=localStorage.getItem('pn-tts')==='1'}catch(e){}
-function pickV(){if(!SS)return;const v=SS.getVoices();thV=v.find(x=>/^th/i.test(x.lang)&&/google/i.test(x.name))||v.find(x=>/^th/i.test(x.lang))||null;const b=document.getElementById('cbSpk');if(b)b.style.display=thV?'':'none';LG.querySelectorAll('.cbSay').forEach(x=>x.style.display=thV?'':'none')}
-if(SS){pickV();SS.onvoiceschanged=pickV}
+// บางเครื่อง (Android/เว็บแอป) getVoices() คืนรายการว่าง แต่ยังพูดภาษาไทยได้ถ้าตั้ง lang — ซ่อนปุ่มเฉพาะเมื่อมีรายการเสียงแต่ไม่มีภาษาไทยเลย
+let canSay=!!SS,noTh=false,noThSaid=false;const isTh=x=>/^th([-_]|$)/i.test(x.lang||'')||/thai|ไทย|kanya|narisa/i.test(x.name||'');
+function pickV(){if(!SS)return;const v=SS.getVoices()||[];thV=v.find(x=>isTh(x)&&/google/i.test(x.name))||v.find(isTh)||null;canSay=true;noTh=v.length>0&&!thV;const b=document.getElementById('cbSpk');if(b)b.style.display=canSay?'':'none';LG.querySelectorAll('.cbSay').forEach(x=>x.style.display=canSay?'':'none')}
+if(SS){pickV();SS.onvoiceschanged=pickV;setTimeout(pickV,800);setTimeout(pickV,3000)}
+// iOS/บางเบราว์เซอร์: ต้องเริ่มเสียงจากการแตะของผู้ใช้ครั้งแรกก่อน จึงจะอ่านอัตโนมัติได้
+let sayUnlocked=false;function unlockSay(){if(sayUnlocked||!SS)return;sayUnlocked=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='th-TH';SS.speak(u)}catch(e){}}
+document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#cbBox,#cbBtn'))unlockSay()},true);
 function sayClean(t){const L=[];for(let l of String(t).split('\n')){l=l.trim();if(!l||/^(ดูรายละเอียด|ลิงก์สำรอง|แหล่งข้อมูลจากเว็บ|\(น้องหยดน้ำเป็น AI|\(สรุปอัตโนมัติ|\(ข้อมูลอัตโนมัติ)/.test(l))continue;
  l=l.replace(/https?:\/\/\S+/g,'').replace(/[\u{1F000}-\u{1FAFF}☀-➿️‍]/gu,'').replace(/[•]/g,'').replace(/·/g,',').replace(/→/g,'ไป').replace(/~/g,'ประมาณ ').trim();if(l)L.push(l)}
  let x=L.join(' ');for(const [a,b] of [['ล้าน ลบ.ม.','ล้านลูกบาศก์เมตร'],['ลบ.ม./วินาที','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม./วิ','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม.','ลูกบาศก์เมตร'],['มม./วัน','มิลลิเมตรต่อวัน'],['มม.','มิลลิเมตร'],['ซม.','เซนติเมตร'],['กม.','กิโลเมตร'],['ชม.','ชั่วโมง'],['/วัน','ต่อวัน'],['%',' เปอร์เซ็นต์'],['อ.','อำเภอ'],['จ.','จังหวัด']])x=x.split(a).join(b);
  return x.replace(/(^|[^ก-๙])ต\.(?=[ก-๙])/g,'$1ตำบล').replace(/\s+/g,' ').trim()}
-function say(t,btn){if(!SS)return;SS.cancel();LG.querySelectorAll('.cbSay.on').forEach(b=>{b.classList.remove('on');b.textContent='🔊'});const x=sayClean(t);if(!x)return;
+function say(t,btn){if(!SS)return;SS.cancel();try{SS.resume()}catch(e){}LG.querySelectorAll('.cbSay.on').forEach(b=>{b.classList.remove('on');b.textContent='🔊'});const x=sayClean(t);if(!x)return;if(noTh&&!noThSaid){noThSaid=true;add('เครื่องนี้ยังไม่มีเสียงอ่านภาษาไทย 🔇 ถ้าไม่ได้ยินเสียง ให้ติดตั้ง/เลือก "Google Text-to-Speech" และดาวน์โหลดเสียงภาษาไทยในการตั้งค่าโทรศัพท์ (การช่วยเหลือพิเศษ › เอาต์พุตการอ่านออกเสียง) หรือบน iPhone: การตั้งค่า › การช่วยการเข้าถึง › เนื้อหาที่พูด › เสียง › ไทย','b')}
  const parts=x.match(/[^,]{1,170}(,|$)|.{1,170}/g)||[x];if(btn){btn.classList.add('on');btn.textContent='⏹'}
  parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p);u.lang='th-TH';if(thV)u.voice=thV;u.rate=1.0;if(i===parts.length-1&&btn)u.onend=u.onerror=()=>{btn.classList.remove('on');btn.textContent='🔊'};SS.speak(u)})}
-function spk(d,t){if(!SS)return;const b=document.createElement('button');b.type='button';b.className='cbSay';b.textContent='🔊';b.title='ฟังเสียง';b.setAttribute('aria-label','ฟังเสียงคำตอบนี้');if(!thV)b.style.display='none';
- b.onclick=()=>{if(b.classList.contains('on')){SS.cancel();b.classList.remove('on');b.textContent='🔊'}else say(t,b)};d.appendChild(b);if(autoSpk&&thV)say(t,b)};
+function spk(d,t){if(!SS)return;const b=document.createElement('button');b.type='button';b.className='cbSay';b.textContent='🔊';b.title='ฟังเสียง';b.setAttribute('aria-label','ฟังเสียงคำตอบนี้');if(!canSay)b.style.display='none';
+ b.onclick=()=>{if(b.classList.contains('on')){SS.cancel();b.classList.remove('on');b.textContent='🔊'}else say(t,b)};d.appendChild(b);if(autoSpk&&canSay)say(t,b)};
 let busy=false,greeted=false;
 let qrShown=false;
 let epC=null;

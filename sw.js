@@ -1,7 +1,7 @@
 /* Service worker — ศูนย์ติดตามสถานการณ์น้ำพนัสนิคม
    หน้าเว็บและข้อมูล: ดึงจากเครือข่ายก่อนเสมอ (ข้อมูลสด) ถ้าออฟไลน์ใช้ชุดล่าสุดที่เก็บไว้
    ไฟล์คงที่ (ไอคอน, ไลบรารี): ใช้จากแคชได้ทันที */
-const V = 'pn-v4';
+const V = 'pn-v5';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'vendor/chart.umd.js'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => Promise.all(CORE.map(u => c.add(new Request(u, {cache: 'reload'})).catch(() => null)))).then(() => self.skipWaiting()));
