@@ -1085,7 +1085,7 @@ async function sayServer(t,btn){const tok=++sayTok;const ac=getAC();if(btn){btn.
   if(tok!==sayTok)return;if(!ac)throw new Error('เบราว์เซอร์นี้เล่นเสียงไม่ได้');
   const ab=await new Promise((ok,no)=>{const p=ac.decodeAudioData(buf.slice(0),ok,no);if(p&&p.then)p.then(ok,no)});if(tok!==sayTok)return;
   const s=ac.createBufferSource();s.buffer=ab;s.connect(ac.destination);s.onended=()=>{if(acSrc===s)acSrc=null;sayOff(btn)};acSrc=s;if(btn)btn.textContent='⏹';s.start(0)}
- catch(e){sayOff(btn);if(tok===sayTok)add('ขออภัยค่ะ ฟังเสียงภาษาไทยไม่ได้ตอนนี้ ('+(e.message||'ผิดพลาด')+') · ถ้าอยากให้เครื่องอ่านเองโดยไม่ต้องรอ ให้ติดตั้งเสียงภาษาไทย: Android ตั้งค่า › การช่วยเหลือพิเศษ › เอาต์พุตการอ่านออกเสียง › Google › ดาวน์โหลดภาษาไทย · iPhone ตั้งค่า › การช่วยการเข้าถึง › เนื้อหาที่พูด › เสียง › ไทย','b')}}
+ catch(e){sayOff(btn);if(tok===sayTok)add('ขออภัยค่ะ ฟังเสียงภาษาไทยไม่ได้ตอนนี้ ('+(e.message||'ผิดพลาด')+') · ถ้าอยากให้เครื่องอ่านเองโดยไม่ต้องรอ ให้ติดตั้งเสียงภาษาไทย: Samsung ตั้งค่า › การจัดการทั่วไป › ข้อความเป็นคำพูด (ค้นคำว่า "ข้อความเป็นคำพูด" หรือ Text-to-speech ในการตั้งค่า) › เลือก "บริการเสียงพูดโดย Google" › ⚙️ › ติดตั้งข้อมูลเสียง › ไทย · Android อื่น ค้นคำว่า Text-to-speech ในการตั้งค่า · iPhone ตั้งค่า › การช่วยการเข้าถึง › เนื้อหาที่พูด › เสียง › ไทย','b')}}
 function say(t,btn,auto){sayStop();try{SS&&SS.resume()}catch(e){}const x=sayClean(t);if(!x)return;pickV();
  if(!thV){if(auto){if(!autoNoteSaid){autoNoteSaid=true;add('เครื่องนี้ไม่มีเสียงอ่านภาษาไทย จึงอ่านอัตโนมัติไม่ได้ค่ะ กดปุ่ม 🔊 ใต้คำตอบเพื่อฟังเสียงภาษาไทยจากระบบได้เลย','b')}return}return sayServer(x,btn)}
  const parts=x.match(/[^,]{1,170}(,|$)|.{1,170}/g)||[x];if(btn){btn.classList.add('on');btn.textContent='⏹'}
