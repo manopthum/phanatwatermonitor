@@ -43,15 +43,36 @@ WL_STATIONS = ["Kgt.19A", "BPK004", "BPK003", "BPK001", "Kgt.1", "PRC002", "Ny.7
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs", "server.log")
 
 
+def _no_quickedit():
+    """Windows: ปิด QuickEdit ของหน้าต่างคำสั่ง — ถ้าเผลอคลิก/ลากเลือกข้อความในหน้าต่าง โปรแกรมจะค้างทั้งเว็บและ tunnel จนกว่าจะกด Enter"""
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+        k = ctypes.windll.kernel32
+        h = k.GetStdHandle(-10)   # STD_INPUT_HANDLE
+        mode = ctypes.c_uint()
+        if k.GetConsoleMode(h, ctypes.byref(mode)):
+            k.SetConsoleMode(h, (mode.value & ~0x0040) | 0x0080)   # ปิด ENABLE_QUICK_EDIT_MODE, เปิด ENABLE_EXTENDED_FLAGS
+    except Exception:
+        pass
+
+
+_no_quickedit()
+
+
 def log(*a):
     line = datetime.now(BKK).strftime("[%Y-%m-%d %H:%M:%S] ") + " ".join(str(x) for x in a)
-    print(line, flush=True)
-    try:  # เก็บ log ลงไฟล์ด้วย (ไม่เกิน ~1 MB แล้วหมุนเป็น server.log.1)
+    try:  # เขียนไฟล์ก่อน (ไม่เกิน ~1 MB แล้วหมุนเป็น server.log.1) แล้วค่อยพิมพ์ลงหน้าต่าง
         os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
         if os.path.exists(LOG_FILE) and os.path.getsize(LOG_FILE) > 1_000_000:
             os.replace(LOG_FILE, LOG_FILE + ".1")
         with open(LOG_FILE, "a", encoding="utf-8") as fh:
             fh.write(line + "\n")
+    except Exception:
+        pass
+    try:
+        print(line, flush=True)
     except Exception:
         pass
 
@@ -706,13 +727,15 @@ ALERT_KEYS = {"tbm": "คลองหลวงที่บ้านท่าบ�
               "canal": "คลองในเมือง", "field": "รายงานน้ำท่วมในตัวเมือง"}
 
 
-def assess(out, detail=False):
+def assess(out, detail=False, texts=False):
     """ประเมินระดับเตือนจากข้อมูลล่าสุด คืน (ระดับ 0-3, รายการเหตุผล) · detail=True คืน sig {หมวด: ระดับ} เพิ่ม"""
-    lv, why, sig = 0, [], {}
+    lv, why, sig, wk = 0, [], {}, {}
     def up(n, t, k=None):
         nonlocal lv
         lv = max(lv, n); why.append((n, t))
         if k:
+            if n >= sig.get(k, 0):
+                wk[k] = t
             sig[k] = max(sig.get(k, 0), n)
     wl = {w.get("c"): w for w in out.get("wl", [])}
     tb = wl.get("Kgt.19A") or {}
@@ -768,6 +791,8 @@ def assess(out, detail=False):
     if fa:
         up(3, f"มีรายงานน้ำท่วมในตัวเมือง สูง {fa.get('dlo', 0) * 100:.0f}–{fa.get('dhi', 0) * 100:.0f} ซม.", "field")
     why.sort(key=lambda x: -x[0])
+    if texts:
+        return lv, [t for _, t in why], sig, wk
     if detail:
         return lv, [t for _, t in why], sig
     return lv, [t for _, t in why]
@@ -945,7 +970,7 @@ TB_LT = {"flood": "จุดน้ำท่วม (ท่วมเกิน 30% 
 def gistda_tambon_rai():
     """พื้นที่น้ำท่วมจากดาวเทียม GISTDA รายตำบล อ.พนัสนิคม (ไร่) จากชุดข้อมูลล่าสุดที่มี (1 วัน → 3 วัน → 7 วัน)"""
     g = read_json("gistda_flood.json", {})
-    for sp, lb in (("1day", "1 วันล่าสุด"), ("3days", "รวม 3 วัน"), ("7days", "รวม 7 วัน")):
+    for sp, lb in (("1day", "1 วันล่าสุด"), ("3days", "รวม 3 วัน"), ("7days", "รวม 7 วัน"), ("last", "ภาพล่าสุดที่มี")):   # ลำดับเดียวกับหน้าเว็บ (obsSp)
         fs = (g.get(sp) or {}).get("features") or []
         if not fs:
             continue
@@ -1190,19 +1215,22 @@ def _alert_places(out, lv):
         return []
 
 
-def alert_changes(prev_sig, sig, prev_pl, pl):
-    """เทียบข้อมูลเตือนภัยรอบก่อนกับปัจจุบัน → (รายการข้อความเปลี่ยนแปลง, มีเรื่องที่แย่ลงหรือไม่)"""
+def alert_changes(prev_sig, sig, prev_pl, pl, wk=None, prev_wk=None):
+    """เทียบข้อมูลเตือนภัยรอบก่อนกับปัจจุบัน → (รายการข้อความเปลี่ยนแปลง, มีเรื่องที่แย่ลงหรือไม่)
+    wk/prev_wk = ข้อความรายละเอียดของแต่ละหมวด (รอบนี้/รอบก่อน) ใช้บอกว่าเปลี่ยนเป็นอะไร"""
     ch, worse = [], False
+    wk, prev_wk = wk or {}, prev_wk or {}
+    nm = lambda k: ALERT_KEYS.get(k, k)
     for k in sig:
         if k not in prev_sig:
-            ch.append(f"เพิ่ม: {ALERT_KEYS.get(k, k)}"); worse = True
+            ch.append(f"เพิ่ม: {wk.get(k) or nm(k)}"); worse = True
         elif sig[k] > prev_sig[k]:
-            ch.append(f"รุนแรงขึ้น: {ALERT_KEYS.get(k, k)}"); worse = True
+            ch.append(f"รุนแรงขึ้น: {wk.get(k) or nm(k)}"); worse = True
         elif sig[k] < prev_sig[k]:
-            ch.append(f"ลดลง: {ALERT_KEYS.get(k, k)}")
+            ch.append(f"ลดลง: {wk.get(k) or nm(k)}")
     for k in prev_sig:
         if k not in sig:
-            ch.append(f"คลี่คลาย: {ALERT_KEYS.get(k, k)}")
+            ch.append(f"คลี่คลาย: {nm(k)}" + (f" (ก่อนหน้า: {prev_wk[k]})" if prev_wk.get(k) else ""))
     add = [n for n in pl if n not in prev_pl]
     rem = [n for n in prev_pl if n not in pl]
     if add:
@@ -1217,7 +1245,7 @@ def check_alerts(out):
     if not has_line and not read_json(PUSH_SUBS, []):
         return
     st = read_json("line_state.json", {})
-    lv, why, sig = assess(out, detail=True)
+    lv, why, sig, wk = assess(out, texts=True)
     pl = _alert_places(out, lv)
     prev = st.get("lv", 0)
     prev_sig = st.get("sig") if isinstance(st.get("sig"), dict) else _sig_from_why(st.get("why"))
@@ -1229,18 +1257,20 @@ def check_alerts(out):
         else:
             sig.pop("canal", None)
     prev_pl = st.get("pl") if isinstance(st.get("sig"), dict) else pl   # state เก่าไม่มีรายชื่อ → ถือว่าเท่าเดิม
+    prev_wk = st.get("wk") if isinstance(st.get("wk"), dict) else {}
     now = datetime.now(timezone.utc)
     last = st.get("t")
     age_h = (now - datetime.fromisoformat(last.replace("Z", "+00:00"))).total_seconds() / 3600 if last else 1e9
     partial = bool(out.get("stale"))   # ข้อมูลบางส่วนเป็นค่ารอบก่อน (API ต้นทางขัดข้อง) → ไม่ส่งข่าวลดระดับ/คลี่คลาย
+    ch, worse = alert_changes(prev_sig, sig, prev_pl, pl, wk, prev_wk)
+    lvch = f"• ระดับเตือน: {PUB_LV.get(prev, prev)} → {PUB_LV[lv]}"
     if lv > prev:
-        head = f"{LV_ICON[lv]} แจ้งเตือนน้ำพนัสนิคม: {PUB_LV[lv]}"
-    elif partial and lv <= prev and not alert_changes(prev_sig, sig, prev_pl, pl)[1]:
+        head = f"{LV_ICON[lv]} แจ้งเตือนน้ำพนัสนิคม: {PUB_LV[lv]}\n" + "\n".join([lvch] + ["• " + c for c in ch[:6]])
+    elif partial and lv <= prev and not worse:
         return
     elif lv < prev:
-        head = f"{LV_ICON[lv]} น้ำพนัสนิคม: ลดระดับเป็น{PUB_LV[lv]}"
+        head = f"{LV_ICON[lv]} น้ำพนัสนิคม: ลดระดับเป็น{PUB_LV[lv]}\n" + "\n".join([lvch] + ["• " + c for c in ch[:6]])
     elif lv >= 1:
-        ch, worse = alert_changes(prev_sig, sig, prev_pl, pl)
         if not ch or age_h < (ALERT_UPD_MIN_H if worse else ALERT_RELAX_MIN_H):
             return
         head = f"{LV_ICON[lv]} อัปเดตเตือนภัยน้ำพนัสนิคม: {PUB_LV[lv]}\n" + "\n".join("• " + c for c in ch[:6])
@@ -1264,7 +1294,7 @@ def check_alerts(out):
     if ok or (not has_line and npush):
         st = read_json("line_state.json", {})
         st.update({"lv": lv, "t": now.isoformat(timespec="seconds").replace("+00:00", "Z"), "why": why[:5],
-                   "sig": sig, "pl": pl})
+                   "sig": sig, "pl": pl, "wk": wk})
         write_json("line_state.json", st)
 
 
@@ -1358,7 +1388,7 @@ GH_FILES = ["index.html", "vendor/chart.umd.js", "data/latest.json", "data/histo
             "data/line_oa.json", "manifest.webmanifest", "sw.js", "icons/icon-192.png", "icons/icon-512.png",
             "icons/icon-maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-64.png", "icons/chat-96.png",
             "data/chat_ep.json", "data/push_pub.json", "data/roads.json", "data/roads_local.json",
-            "data/src_cache.json", "server.py"]   # src_cache.json: ค่าล่าสุดของแต่ละแหล่ง ให้ระบบสำรองใช้ตอนแหล่งข้อมูลล่ม · server.py: ให้ระบบดึงข้อมูลสำรองบน GitHub Actions (backup/collect.py) ใช้โค้ดชุดเดียวกัน · ไม่มีคีย์ในไฟล์นี้
+            "data/src_cache.json", "server.py"]   # ให้ระบบดึงข้อมูลสำรองบน GitHub Actions (backup/collect.py) ใช้โค้ดและค่าล่าสุดชุดเดียวกัน · ไม่มีคีย์ในไฟล์เหล่านี้ · อย่าลบ
 
 
 def gh_repo():
@@ -2185,7 +2215,8 @@ def line_reply(token, text):
     if not tk:
         return
     msg = {"type": "text", "text": text[:4900],
-           "quickReply": {"items": [{"type": "action", "action": {"type": "message", "label": m, "text": m}} for m in BOT_MENU]}}
+           "quickReply": {"items": [{"type": "action", "action": {"type": "message", "label": "🔊 ฟังเสียง", "text": "ฟังเสียง"}}] +
+                          [{"type": "action", "action": {"type": "message", "label": m, "text": m}} for m in BOT_MENU]}}
     req = urllib.request.Request("https://api.line.me/v2/bot/message/reply", data=json.dumps({"replyToken": token, "messages": [msg]}).encode(),
                                  headers={"Authorization": "Bearer " + tk, "Content-Type": "application/json"})
     try:
@@ -2263,6 +2294,7 @@ def ai_weathernext():
 KBW_MAX = 0.5        # เพดานผลน้ำหนุนที่ปรับเทียบได้ (เดิม 1.1)
 CAP19_DEFAULT = 54.0   # ความจุคลองหลวงที่ Kgt.19A (จากอัตราไหล 24.5 ลบ.ม./วิ ที่ 62% ตลิ่ง)
 CAPA_SCALE = 1.5       # คลองหลวงช่วงล่าง
+EB_RB, EB_RA, EB_FE, EB_CAP = 41, 13, 0.2, 25.0   # สายตะวันออก หมอนนาง→บ้านช้าง→คลองหลวง: แยกที่ B41 ลงที่ A13 · สัดส่วน 20% · ความจุสมมติ 25 ลบ.ม./วิ
 CAPB = 100             # ลำน้ำบ้านบึง ทุ่งขวาง–หน้าพระธาตุ (รับ ~86 ลบ.ม./วิ ได้โดยไม่ล้น)
 KBW_DEFAULT = 0.4    # (ลดลงจาก 0.88 ตามข้อมูลจากพื้นที่ว่าผลน้ำหนุนน้อยกว่าที่ประเมิน) · ค่าตั้งต้นของผลน้ำหนุนบางปะกง (ปรับเทียบอัตโนมัติจากรายงานระดับคลองในเมือง)
 CANAL_DEPTH = 2.5    # ความลึกคลองในเมืองโดยประมาณ (ม.)
@@ -2322,6 +2354,13 @@ def town_calc(out):
     sub = qT is not None and qT >= rel   # ค่าที่ Kgt.19A รวมน้ำฝนต้นทางไว้แล้ว ไม่นับซ้ำ
     Qr = [(q + 0.5 * f * (pb * max(0.0, M["cbb"][r] - (M["cbb"][r19] if sub else 0)) + pl * max(0.0, M["cloc"][r] - (M["cloc"][r19] if sub else 0))))
           if M["ch"][r] == "A" else 0.5 * f * (pb * M["cbb"][r] + pl * M["cloc"][r]) for r in range(len(M["rc"]))]
+    # ลำน้ำหมอนนาง–บ้านช้าง (สายตะวันออก) แยกจากลำน้ำบ้านบึงที่ reach B41 ผ่านสะพานวังเดือนห้า (ทล.3246) ไปลงคลองหลวงที่ reach A13
+    qE = EB_FE * Qr[EB_RB]
+    for r in range(len(Qr)):
+        if M["ch"][r] == "B" and r >= EB_RB:
+            Qr[r] = max(0.0, Qr[r] - qE)
+        elif M["ch"][r] == "A" and r >= EB_RA:
+            Qr[r] += qE
     qB = Qr[(P.get("ตัวเมืองพนัสนิคม") or {}).get("r", 46)]
     Qt = min(0.45 * qB, 45)
     now = datetime.now(BKK)
@@ -2358,7 +2397,7 @@ def town_calc(out):
                         c["pct"] = min(c["pf"] / den, 130)
     except Exception:
         pass
-    return {"M": M, "P": P, "Qr": Qr, "q": q, "pl": pl, "pb": pb, "qB": qB, "Qt": Qt, "B": B, "K": K, "den": den, "canals": canals, "wl": wl, "cap19": cap19, "capA": capA, "capB": CAPB}
+    return {"M": M, "P": P, "Qr": Qr, "q": q, "pl": pl, "pb": pb, "qB": qB, "Qt": Qt, "B": B, "K": K, "den": den, "canals": canals, "wl": wl, "cap19": cap19, "capA": capA, "capB": CAPB, "qE": qE, "pE": qE / EB_CAP * 100}
 
 
 def calibrate_bw(out):
@@ -2449,6 +2488,9 @@ def town_model(out):
                   (" (รวมผลน้ำหนุนบางปะกง)" if T["B"] * T["K"] > 0.05 else ""))
         L.append(f"• คลองในเมือง {n}: น้ำไหล ~{qq:.0f} ลบ.ม./วิ · ระดับน้ำ ~{pct:.0f}% ของตลิ่ง · {st}")
     L.append(f"(น้ำจากบ้านบึงที่ตัวเมือง ~{T['qB']:.0f} ลบ.ม./วิ แยกเข้าเมือง ~{T['Qt']:.0f} ที่เหลือไปทางห้วยเกวียน)")
+    pe = T["pE"]
+    L.append(f"• สะพานวังเดือนห้า (ต.บ้านช้าง) ลำน้ำหมอนนาง→คลองหลวง (แยกจากลำน้ำบ้านบึงราว 20%): น้ำไหล ~{T['qE']:.0f} ลบ.ม./วิ · ~{pe:.0f}% ของความจุสมมติ {EB_CAP:.0f} ลบ.ม./วิ · "
+             + ("ล้นตลิ่ง" if pe >= 100 else f"ต่ำกว่าตลิ่งประมาณ {pct_to_fb(pe) * 100:.0f} ซม.") + " (ค่าประมาณ ยังไม่มีค่าวัดจริง)")
     return "\n".join(L)
 
 
@@ -2647,14 +2689,165 @@ def line_loading(uid):
 
 def handle_text(tok, txt, src):
     t = txt.strip()
-    if t in BOT_MENU or not _read_txt(GEMINI_KEY_FILE) or len(t) <= 2 or is_line_id_q(t):
-        line_reply(tok, bot_answer(t))
-        return
     uid = src.get("userId") or src.get("groupId") or "anon"
+    if t in TTS_WORDS:
+        return tts_reply(tok, src)
+    if t in BOT_MENU or not _read_txt(GEMINI_KEY_FILE) or len(t) <= 2 or is_line_id_q(t):
+        a = bot_answer(t)
+        LAST_ANS[uid] = a
+        line_reply(tok, a)
+        return
     if src.get("type") == "user":
         line_loading(uid)
     ans = ai_answer(uid, t)
-    line_reply(tok, ans if ans else bot_answer(t))
+    a = ans if ans else bot_answer(t)
+    LAST_ANS[uid] = a
+    line_reply(tok, a)
+
+
+# ---------- น้องหยดน้ำพูดได้ (LINE): สร้างเสียงเฉพาะเมื่อผู้ใช้กด "ฟังเสียง" · ใช้ไฟล์เสียงซ้ำถ้าข้อความเดิม (ประหยัดโควตา) ----------
+TTS_WORDS = ("ฟังเสียง", "🔊 ฟังเสียง", "อ่านออกเสียง", "ฟัง")
+TTS_MODELS = ["gemini-2.5-flash-preview-tts", "gemini-2.5-flash-tts"]
+TTS_VOICE = "Kore"
+TTS_MAX_DAY = 30           # จำนวนเสียงที่สร้างใหม่ต่อวัน (ไฟล์ที่เคยสร้างแล้วเล่นซ้ำได้ ไม่นับ)
+TTS_USER_HOUR = 5          # ต่อคนต่อชั่วโมง
+TTS_MAX_CHARS = 600        # อ่านเฉพาะช่วงต้นของคำตอบ
+TTS_DIR = os.path.join(DATA, "tts")
+TTS = {"day": "", "n": 0, "off_until": 0, "user": {}}
+TTS_LOCK = threading.Lock()
+LAST_ANS = {}              # uid -> คำตอบล่าสุด (ในหน่วยความจำเท่านั้น)
+
+
+def tts_clean(text):
+    """ตัดลิงก์ อีโมจิ ข้อความท้าย ให้อ่านออกเสียงเป็นธรรมชาติ"""
+    import re
+    keep = []
+    for ln in (text or "").split("\n"):
+        l = ln.strip()
+        if not l or l.startswith(("ดูรายละเอียด", "ลิงก์สำรอง", "แหล่งข้อมูลจากเว็บ", "(น้องหยดน้ำเป็น AI", "(สรุปอัตโนมัติ", "(ข้อมูลอัตโนมัติ")):
+            continue
+        l = re.sub(r"https?://\S+", "", l)
+        l = re.sub(r"[\U0001F000-\U0001FAFF\u2600-\u27BF\uFE0F\u200d]", "", l)
+        l = l.replace("💧 น้องหยดน้ำ:", "").replace("•", "").replace("·", ",").replace("→", "ไป").replace("~", "ประมาณ ").strip(" :")
+        if l:
+            keep.append(l)
+    t = " ".join(keep)
+    for x, y in (("ล้าน ลบ.ม.", "ล้านลูกบาศก์เมตร"), ("ลบ.ม./วินาที", "ลูกบาศก์เมตรต่อวินาที"), ("ลบ.ม./วิ", "ลูกบาศก์เมตรต่อวินาที"), ("ลบ.ม.", "ลูกบาศก์เมตร"),
+                 ("มม./วัน", "มิลลิเมตรต่อวัน"), ("มม.", "มิลลิเมตร"), ("ซม.", "เซนติเมตร"), ("กม.", "กิโลเมตร"), ("ชม.", "ชั่วโมง"),
+                 ("ม.รทก.", "เมตร รทก."), ("/วัน", "ต่อวัน"), ("%", " เปอร์เซ็นต์"), ("อ.", "อำเภอ"), ("จ.", "จังหวัด")):
+        t = t.replace(x, y)
+    t = re.sub(r"(?<![ก-๙])ต\.(?=[ก-๙])", "ตำบล", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    if len(t) > TTS_MAX_CHARS:
+        cut = max(t.rfind(" ", 0, TTS_MAX_CHARS), TTS_MAX_CHARS // 2)
+        t = t[:cut] + " ... อ่านรายละเอียดต่อในข้อความได้เลยค่ะ"
+    return t
+
+
+def _wav(pcm, rate=24000):
+    import struct
+    return (b"RIFF" + struct.pack("<I", 36 + len(pcm)) + b"WAVEfmt " + struct.pack("<IHHIIHH", 16, 1, 1, rate, rate * 2, 2, 16)
+            + b"data" + struct.pack("<I", len(pcm)) + pcm)
+
+
+def _ffmpeg():
+    import shutil
+    for c in (os.path.join(ROOT, "vendor", "ffmpeg.exe"), os.path.join(ROOT, "vendor", "ffmpeg"), shutil.which("ffmpeg")):
+        if c and os.path.exists(c):
+            return c
+    return None
+
+
+def tts_make(text):
+    """สร้าง (หรือใช้ซ้ำ) ไฟล์เสียงของข้อความ → (ชื่อไฟล์, ความยาว ms, ข้อความผิดพลาด)"""
+    import hashlib, base64, subprocess
+    key = _read_txt(GEMINI_KEY_FILE)
+    if not key:
+        return None, 0, "ยังไม่ได้ตั้งค่า AI"
+    os.makedirs(TTS_DIR, exist_ok=True)
+    h = hashlib.sha1((TTS_VOICE + text).encode()).hexdigest()[:16]
+    wav, m4a = os.path.join(TTS_DIR, h + ".wav"), os.path.join(TTS_DIR, h + ".m4a")
+    if os.path.exists(wav):
+        ms = int((os.path.getsize(wav) - 44) / 48)
+        return (h + ".m4a" if os.path.exists(m4a) else h + ".wav"), ms, ""
+    with TTS_LOCK:
+        day = datetime.now(BKK).strftime("%Y-%m-%d")
+        if not TTS["day"]:
+            TTS.update(read_json("tts_state.json", {}) or {})   # จำโควตาข้ามการรีสตาร์ท
+            TTS.setdefault("user", {})
+        if TTS["day"] != day:
+            TTS.update(day=day, n=0)
+        if TTS["n"] >= TTS_MAX_DAY or time.time() < TTS.get("off_until", 0):
+            return None, 0, "วันนี้ใช้โควตาเสียงครบแล้ว"
+        TTS["n"] += 1
+        write_json("tts_state.json", {"day": TTS["day"], "n": TTS["n"], "off_until": TTS.get("off_until", 0)})
+    body = {"contents": [{"parts": [{"text": "อ่านข้อความภาษาไทยต่อไปนี้ด้วยน้ำเสียงสุภาพ ชัดเจน เป็นกันเอง: " + text}]}],
+            "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": TTS_VOICE}}}}}
+    pcm, err = None, ""
+    for m in TTS_MODELS:
+        req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent",
+                                     data=json.dumps(body).encode(), headers={"x-goog-api-key": key, "Content-Type": "application/json"})
+        try:
+            j = json.loads(urllib.request.urlopen(req, timeout=60).read())
+            part = j["candidates"][0]["content"]["parts"][0]["inlineData"]
+            pcm = base64.b64decode(part["data"])
+            break
+        except urllib.error.HTTPError as e:
+            err = f"HTTP {e.code}"
+            if e.code == 429:
+                TTS["off_until"] = time.time() + 3 * 3600
+                break
+        except Exception as e:
+            err = type(e).__name__
+    if not pcm:
+        log("เสียงน้องหยดน้ำ: สร้างไม่สำเร็จ", err)
+        return None, 0, "สร้างเสียงไม่สำเร็จ"
+    with open(wav, "wb") as f:
+        f.write(_wav(pcm))
+    ms = int(len(pcm) / 48)
+    ff = _ffmpeg()
+    if ff:
+        try:
+            subprocess.run([ff, "-y", "-loglevel", "error", "-i", wav, "-c:a", "aac", "-b:a", "48k", m4a], timeout=60, check=True)
+        except Exception as e:
+            log("เสียงน้องหยดน้ำ: แปลง m4a ไม่สำเร็จ", type(e).__name__)
+    # ลบไฟล์เสียงเก่ากว่า 2 วัน
+    try:
+        for fn in os.listdir(TTS_DIR):
+            fp = os.path.join(TTS_DIR, fn)
+            if time.time() - os.path.getmtime(fp) > 2 * 86400:
+                os.remove(fp)
+    except Exception:
+        pass
+    log("เสียงน้องหยดน้ำ: สร้างแล้ว", f"{ms / 1000:.0f} วิ", f"(วันนี้ {TTS['n']}/{TTS_MAX_DAY})")
+    return (h + ".m4a" if os.path.exists(m4a) else h + ".wav"), ms, ""
+
+
+def tts_reply(tok, src):
+    uid = src.get("userId") or src.get("groupId") or "anon"
+    now = time.time()
+    with TTS_LOCK:
+        u = [t for t in TTS["user"].get(uid, []) if now - t < 3600]
+        if len(u) >= TTS_USER_HOUR:
+            line_reply(tok, "ขอฟังเสียงบ่อยเกินไปค่ะ ลองใหม่อีกสักครู่นะคะ")
+            return
+        TTS["user"][uid] = u + [now]
+    text = tts_clean(LAST_ANS.get(uid) or build_public(read_json("latest.json", {})))
+    base = TUNNEL.get("url") or ""
+    if not text or not base.startswith("https://"):
+        line_reply(tok, "ตอนนี้ฟังเสียงไม่ได้ค่ะ อ่านจากข้อความ หรือกดปุ่ม 🔊 ในแชตบนเว็บแทนได้นะคะ")
+        return
+    if src.get("type") == "user":
+        line_loading(uid)
+    fn, ms, err = tts_make(text)
+    if not fn:
+        line_reply(tok, f"ขออภัยค่ะ {err} · ฟังเสียงจากแชตบนเว็บ (ปุ่ม 🔊) แทนได้ ไม่มีค่าใช้จ่ายค่ะ\n{gh_pages_url() or DASH_URL}")
+        return
+    url = f"{base}/data/tts/{fn}"
+    if fn.endswith(".m4a"):
+        line_reply_msgs(tok, [{"type": "audio", "originalContentUrl": url, "duration": max(1000, ms)}])
+    else:
+        line_reply(tok, f"🔊 กดลิงก์เพื่อฟังเสียงน้องหยดน้ำ (~{max(1, round(ms / 1000))} วินาที):\n{url}")
 
 
 # ---------- ประชาชนแจ้งน้ำท่วมผ่าน LINE ----------
