@@ -1059,7 +1059,7 @@ const remote=/github\.io$/.test(location.hostname)||location.protocol==='file:';
 let sid='';try{sid=localStorage.getItem('pn-chat-sid')||'';if(!sid){sid=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('pn-chat-sid',sid)}}catch(e){sid=Math.random().toString(36).slice(2)}
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=t=>esc(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
-const add=(t,who)=>{const d=document.createElement('div');d.className='cbm '+who;d.innerHTML=fmt(t);LG.appendChild(d);if(who==='b'&&t&&!/กำลังคิด|กำลังส่ง|กำลังหาเส้นทาง/.test(t))spk(d,t);LG.scrollTop=LG.scrollHeight;return d}
+const add=(t,who,ns)=>{const d=document.createElement('div');d.className='cbm '+who;d.innerHTML=fmt(t);LG.appendChild(d);if(who==='b'&&!ns&&t&&!/กำลังคิด|กำลังส่ง|กำลังหาเส้นทาง/.test(t))spk(d,t);LG.scrollTop=LG.scrollHeight;return d}
 // ---- น้องหยดน้ำพูดได้: อ่านออกเสียงด้วยเสียงภาษาไทยของเครื่อง (ฟรี) + พูดถามด้วยไมค์ ----
 const SS=window.speechSynthesis;let thV=null,autoSpk=false;try{autoSpk=localStorage.getItem('pn-tts')==='1'}catch(e){}
 // ใช้เสียงไทยของเครื่องถ้ามี (ฟรี) — ถ้าเครื่องไม่มีเสียงไทย (Android/เว็บแอปหลายรุ่นอ่านเป็นสำเนียงอังกฤษ) ใช้เสียงไทยจากเซิร์ฟเวอร์แทน
@@ -1069,7 +1069,7 @@ if(SS){pickV();SS.onvoiceschanged=pickV;setTimeout(pickV,800);setTimeout(pickV,3
 {const b=document.getElementById('cbSpk');if(b)b.style.display=''}
 // เสียงจากเซิร์ฟเวอร์เล่นผ่าน Web Audio — ต้องปลดล็อกจากการแตะของผู้ใช้ (iOS)
 let AC=null,acSrc=null,sayUnlocked=false;function getAC(){try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(C)AC=new C()}if(AC&&AC.state==='suspended')AC.resume()}catch(e){}return AC}
-function unlockSay(){getAC();if(sayUnlocked||!SS)return;sayUnlocked=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='th-TH';SS.speak(u)}catch(e){}}
+function unlockSay(){getAC();if(!SS)return;pickV();if(sayUnlocked)return;sayUnlocked=true;try{const u=new SpeechSynthesisUtterance('.');u.volume=0;u.rate=2;u.lang='th-TH';if(thV)u.voice=thV;SS.speak(u)}catch(e){}}
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#cbBox,#cbBtn'))unlockSay()},true);
 function sayClean(t){const L=[];for(let l of String(t).split('\n')){l=l.trim();if(!l||/^(ดูรายละเอียด|ลิงก์สำรอง|แหล่งข้อมูลจากเว็บ|\(น้องหยดน้ำเป็น AI|\(สรุปอัตโนมัติ|\(ข้อมูลอัตโนมัติ)/.test(l))continue;
  l=l.replace(/https?:\/\/\S+/g,'').replace(/[\u{1F000}-\u{1FAFF}☀-➿️‍]/gu,'').replace(/[•]/g,'').replace(/·/g,',').replace(/→/g,'ไป').replace(/~/g,'ประมาณ ').trim();if(l)L.push(l)}
@@ -1085,11 +1085,16 @@ async function sayServer(t,btn){const tok=++sayTok;const ac=getAC();if(btn){btn.
   if(tok!==sayTok)return;if(!ac)throw new Error('เบราว์เซอร์นี้เล่นเสียงไม่ได้');
   const ab=await new Promise((ok,no)=>{const p=ac.decodeAudioData(buf.slice(0),ok,no);if(p&&p.then)p.then(ok,no)});if(tok!==sayTok)return;
   const s=ac.createBufferSource();s.buffer=ab;s.connect(ac.destination);s.onended=()=>{if(acSrc===s)acSrc=null;sayOff(btn)};acSrc=s;if(btn)btn.textContent='⏹';s.start(0)}
- catch(e){sayOff(btn);if(tok===sayTok)add('ขออภัยค่ะ ฟังเสียงภาษาไทยไม่ได้ตอนนี้ ('+(e.message||'ผิดพลาด')+') · ถ้าอยากให้เครื่องอ่านเองโดยไม่ต้องรอ ให้ติดตั้งเสียงภาษาไทย: Samsung ตั้งค่า › การจัดการทั่วไป › ข้อความเป็นคำพูด (ค้นคำว่า "ข้อความเป็นคำพูด" หรือ Text-to-speech ในการตั้งค่า) › เลือก "บริการเสียงพูดโดย Google" › ⚙️ › ติดตั้งข้อมูลเสียง › ไทย · Android อื่น ค้นคำว่า Text-to-speech ในการตั้งค่า · iPhone ตั้งค่า › การช่วยการเข้าถึง › เนื้อหาที่พูด › เสียง › ไทย','b')}}
+ catch(e){sayOff(btn);if(tok===sayTok)add('ขออภัยค่ะ ฟังเสียงภาษาไทยไม่ได้ตอนนี้ ('+(e.message||'ผิดพลาด')+') · ถ้าอยากให้เครื่องอ่านเองโดยไม่ต้องรอ ให้ติดตั้งเสียงภาษาไทย: Samsung ตั้งค่า › การจัดการทั่วไป › ข้อความเป็นคำพูด (ค้นคำว่า "ข้อความเป็นคำพูด" หรือ Text-to-speech ในการตั้งค่า) › เลือก "บริการเสียงพูดโดย Google" › ⚙️ › ติดตั้งข้อมูลเสียง › ไทย · Android อื่น ค้นคำว่า Text-to-speech ในการตั้งค่า · iPhone ตั้งค่า › การช่วยการเข้าถึง › เนื้อหาที่พูด › เสียง › ไทย','b',1)}}
 function say(t,btn,auto){sayStop();try{SS&&SS.resume()}catch(e){}const x=sayClean(t);if(!x)return;pickV();
- if(!thV){if(auto){if(!autoNoteSaid){autoNoteSaid=true;add('เครื่องนี้ไม่มีเสียงอ่านภาษาไทย จึงอ่านอัตโนมัติไม่ได้ค่ะ กดปุ่ม 🔊 ใต้คำตอบเพื่อฟังเสียงภาษาไทยจากระบบได้เลย','b')}return}return sayServer(x,btn)}
- const parts=x.match(/[^,]{1,170}(,|$)|.{1,170}/g)||[x];if(btn){btn.classList.add('on');btn.textContent='⏹'}
- parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p);u.lang=thV.lang||'th-TH';u.voice=thV;u.rate=1.0;if(i===parts.length-1&&btn)u.onend=u.onerror=()=>sayOff(btn);SS.speak(u)})}
+ const nv=SS?(SS.getVoices()||[]).length:0;
+ // ไม่มีเสียงไทยแน่ ๆ (มีรายการเสียงแต่ไม่มีไทย) หรือเบราว์เซอร์ไม่มีระบบเสียง → เสียงจากเซิร์ฟเวอร์ (เฉพาะกดปุ่ม)
+ if(!SS||(!thV&&nv>0)){if(auto){autoNote();return}return sayServer(x,btn)}
+ // มีเสียงไทย หรือเครื่องไม่บอกรายการเสียง (Android บางรุ่น) → ลองเสียงเครื่องก่อน ถ้าไม่เริ่มพูดใน 2.5 วิ ค่อยใช้เสียงเซิร์ฟเวอร์
+ const tok=++sayTok;let started=false;const parts=x.match(/[^,]{1,170}(,|$)|.{1,170}/g)||[x];if(btn){btn.classList.add('on');btn.textContent='⏹'}
+ parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p);u.lang=(thV&&thV.lang)||'th-TH';if(thV)u.voice=thV;u.rate=1.0;u.onstart=()=>{started=true};if(i===parts.length-1)u.onend=()=>sayOff(btn);u.onerror=ev=>{if(i===parts.length-1||!started)sayOff(btn)};SS.speak(u)});
+ setTimeout(()=>{if(started||tok!==sayTok)return;try{SS.cancel()}catch(e){}sayOff(btn);if(auto)autoNote();else sayServer(x,btn)},2500)}
+function autoNote(){if(autoNoteSaid)return;autoNoteSaid=true;add('ตอนนี้เบราว์เซอร์ยังไม่ยอมให้อ่านออกเสียงอัตโนมัติค่ะ 🔇 ลองกดปุ่ม 🔊 ใต้คำตอบหนึ่งครั้ง (ถ้าได้ยินเสียงไทยแล้ว การอ่านอัตโนมัติมักจะใช้ได้ต่อ) · ถ้ายังไม่ได้ ให้ปิดเว็บแอปแล้วเปิดใหม่หลังติดตั้งเสียงไทย','b',1)}
 function spk(d,t){const b=document.createElement('button');b.type='button';b.className='cbSay';b.textContent='🔊';b.title='ฟังเสียง';b.setAttribute('aria-label','ฟังเสียงคำตอบนี้');if(!canSay)b.style.display='none';
  b.onclick=()=>{if(b.classList.contains('on')){sayTok++;sayStop()}else say(t,b)};d.appendChild(b);if(autoSpk&&canSay)say(t,b,true)};
 let busy=false,greeted=false;
@@ -1224,7 +1229,7 @@ async function ask(q){q=(q||'').trim();if(!q||busy)return;add(q,'u');I.value='';
 B.onclick=()=>{X.classList.toggle('on');if(X.classList.contains('on')){if(!greeted){greeted=true;add('สวัสดีค่ะ 💧 น้องหยดน้ำ จากศูนย์ติดตามสถานการณ์น้ำพนัสนิคมค่ะ\nถามเรื่องน้ำ ฝน น้ำท่วม พิมพ์มาได้เลย หรือกดปุ่มด้านล่าง:\n• ขอความช่วยเหลือ — ส่งเรื่องต่อผู้ดูแลศูนย์ (เร่งด่วนโทร 1669/1784)\n• สถานการณ์ — สรุปสถานการณ์น้ำล่าสุด\n• แจ้งน้ำท่วม — ส่งตำแหน่งและความสูงน้ำจุดที่คุณอยู่\n• เส้นทาง — หาเส้นทางเลี่ยงจุดน้ำท่วม\n• ระดับน้ำ — คลองหลวง บางปะกง\n• อ่างเก็บน้ำ\n• ฝน — ฝนวัดได้และพยากรณ์\n• ภาพถ่ายดาวเทียม — ภาพเมฆและพื้นที่น้ำขังล่าสุด\n• แผนที่ — แผนที่พื้นที่เสี่ยงน้ำท่วม\n• เบอร์ฉุกเฉิน\n(ข้อมูลอัตโนมัติ ไม่ใช่ประกาศทางราชการ)','b')}setTimeout(()=>I.focus(),50)}};
 document.getElementById('cbX').onclick=()=>{X.classList.remove('on');sayTok++;sayStop()};
 {const sb=document.getElementById('cbSpk');const upd=()=>{sb.textContent=autoSpk?'🔊':'🔈';sb.setAttribute('aria-pressed',autoSpk?'true':'false');sb.title=autoSpk?'กำลังอ่านออกเสียงอัตโนมัติ (กดเพื่อปิด)':'อ่านคำตอบออกเสียงอัตโนมัติ (กดเพื่อเปิด)'};upd();
- sb.onclick=()=>{autoSpk=!autoSpk;try{localStorage.setItem('pn-tts',autoSpk?'1':'0')}catch(e){}upd();if(!autoSpk){sayTok++;sayStop()}else{const last=[...LG.querySelectorAll('.cbm.b')].pop();if(last){const bt=last.querySelector('.cbSay');if(bt)bt.click()}}}}
+ sb.onclick=()=>{autoSpk=!autoSpk;unlockSay();try{localStorage.setItem('pn-tts',autoSpk?'1':'0')}catch(e){}upd();if(!autoSpk){sayTok++;sayStop()}else{const last=[...LG.querySelectorAll('.cbm.b')].pop();if(last){const bt=last.querySelector('.cbSay');if(bt)bt.click()}}}}
 {const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const mb=document.getElementById('cbMic');
  if(SR&&window.isSecureContext){mb.style.display='';let rec=null;mb.onclick=()=>{if(rec){rec.stop();return}sayTok++;sayStop();rec=new SR();rec.lang='th-TH';rec.interimResults=true;rec.maxAlternatives=1;let fin='';
   mb.classList.add('on');mb.textContent='⏺';I.placeholder='กำลังฟัง… พูดคำถามได้เลย';
