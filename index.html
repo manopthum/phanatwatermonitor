@@ -116,7 +116,7 @@ figcaption{font-size:12.5px;color:var(--ink2)}figcaption b{display:block;font-we
 <div class="wrap">
 <div class="top">
 <div><h1>ศูนย์ติดตามสถานการณ์น้ำพนัสนิคม</h1><div class="eyebrow" style="margin-top:4px">อ.พนัสนิคม · จ.ชลบุรี · ลุ่มน้ำคลองหลวง–บางปะกง</div></div>
-<div class="topr"><div id="clk" class="clk" aria-live="off"><b id="clkT">--:--:--</b><span id="clkD"></span></div><div id="fresh" class="fresh"><i></i><span>กำลังโหลดข้อมูล…</span></div><button id="instBtn" class="fsb" type="button" hidden title="ติดตั้งเป็นแอปบนมือถือ/คอมพิวเตอร์">📲 ติดตั้งแอป</button><button id="pushBtn" class="fsb" type="button" title="แจ้งเตือนบนมือถือ/คอมพิวเตอร์เมื่อสถานการณ์น้ำเปลี่ยน">🔔 รับแจ้งเตือน</button><a id="lineBtn" class="fsb lineb" href="https://line.me/R/ti/p/%40991zcebg" target="_blank" rel="noopener" title="เพิ่มเพื่อน LINE OA ของศูนย์ รับแจ้งเตือนน้ำท่วมและถามน้องหยดน้ำ">💬 เพิ่มเพื่อน LINE</a><button id="themeBtn" class="fsb" type="button" title="สลับโหมดสว่าง/มืด">☀ โหมดสว่าง</button><button id="fsBtn" class="fsb" type="button">⛶ เต็มจอ</button></div>
+<div class="topr"><div id="clk" class="clk" aria-live="off"><b id="clkT">--:--:--</b><span id="clkD"></span></div><div id="fresh" class="fresh"><i></i><span>กำลังโหลดข้อมูล…</span></div><button id="instBtn" class="fsb" type="button" hidden title="ติดตั้งเป็นแอปบนมือถือ/คอมพิวเตอร์">📲 ติดตั้งแอป</button><button id="pushBtn" class="fsb" type="button" title="แจ้งเตือนบนมือถือ/คอมพิวเตอร์เมื่อสถานการณ์น้ำเปลี่ยน">🔔 รับแจ้งเตือน</button><button id="voiceBtn" class="fsb" type="button" title="อ่านประกาศเตือนภัยออกเสียงอัตโนมัติ เมื่อเปิดหน้านี้ค้างไว้">🔈 เสียงเตือนภัย</button><a id="lineBtn" class="fsb lineb" href="https://line.me/R/ti/p/%40991zcebg" target="_blank" rel="noopener" title="เพิ่มเพื่อน LINE OA ของศูนย์ รับแจ้งเตือนน้ำท่วมและถามน้องหยดน้ำ">💬 เพิ่มเพื่อน LINE</a><button id="themeBtn" class="fsb" type="button" title="สลับโหมดสว่าง/มืด">☀ โหมดสว่าง</button><button id="fsBtn" class="fsb" type="button">⛶ เต็มจอ</button></div>
 </div>
 <div id="fieldAlert" style="display:none;margin-bottom:12px;padding:12px 16px;border-radius:10px;background:#c62828;color:#fff;font-weight:600;line-height:1.5"></div>
 <div id="banner" class="banner"><span class="lv s-watch">กำลังโหลด</span><div class="hd">กำลังอ่านข้อมูลล่าสุด</div><div class="ds">ข้อมูลอัปเดตอัตโนมัติทุก 1 ชั่วโมง</div></div>
@@ -873,8 +873,8 @@ setInterval(async()=>{if(document.hidden||LOADING)return;try{const r=repMerge(aw
 // จอทีวี/Android box ที่เปิดค้างไว้นาน: โหลดข้อมูลใหม่เมื่อกลับมาแสดงผลหรือเน็ตกลับมา และรีเฟรชทั้งหน้าทุก 2 ชม. (กันหน่วยความจำเต็ม/ค้าง)
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)safeLoad()});
 window.addEventListener('online',()=>safeLoad());
-setInterval(()=>{const lb=document.querySelector('#lbx.on,.lbx.on');if(Date.now()-PAGE_T0>2*3600e3&&!lb&&navigator.onLine!==false)location.reload()},60000);
-setInterval(()=>{if(LAST_OK&&Date.now()-LAST_OK>20*60000&&navigator.onLine!==false)location.reload()},5*60000);
+setInterval(()=>{const lb=document.querySelector('#lbx.on,.lbx.on');if(Date.now()-PAGE_T0>2*3600e3&&!lb&&navigator.onLine!==false&&!(window.PN_VOICE_ON&&window.PN_VOICE_ON()))location.reload()},60000);
+setInterval(()=>{if(LAST_OK&&Date.now()-LAST_OK>20*60000&&navigator.onLine!==false&&!(window.PN_VOICE_ON&&window.PN_VOICE_ON()))location.reload()},5*60000);
 setInterval(()=>{fresh();if(HELP)renderHelp();if(WARN)renderWarn()},60000);
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawCharts);new MutationObserver(drawCharts).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']})}catch(e){}
 })();
@@ -1248,6 +1248,89 @@ F.onsubmit=e=>{e.preventDefault();ask(I.value)};
 function satOpen(asked){if(!asked)add('ภาพถ่ายดาวเทียม','u');const u=location.pathname+'?view=sat';const d=add('🛰 เปิดหน้าภาพดาวเทียมล่าสุดให้แล้วค่ะ (Himawari ภาพเมฆล่าสุด · MODIS ภาพรายวัน · ซูมเข้าเพื่อดูชื่อตำบล)\n','b');const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';a.textContent='เปิดหน้าภาพดาวเทียม';d.appendChild(a);
  if(document.documentElement.classList.contains('satview'))return;const w=window.open(u,'_blank','noopener');if(!w){const p=document.getElementById('satPanel');if(p){X.classList.remove('on');p.scrollIntoView({behavior:'smooth',block:'start'})}}}
 document.querySelectorAll('#cbQ button').forEach(b=>b.onclick=()=>ask(b.textContent.replace(/^[^\u0E00-\u0E7Fa-zA-Z0-9]+\s*/,'')));
+window.PNV={say:(t,btn)=>say(t,btn,false),stop:()=>{sayTok++;sayStop()},unlock:unlockSay,ac:getAC};
+})();</script>
+<style>
+#alBox{position:fixed;left:50%;transform:translateX(-50%);top:12px;z-index:9998;width:min(560px,calc(100% - 24px));background:var(--surface);color:inherit;border:2px solid #d93025;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:14px 16px;box-sizing:border-box}
+#alBox[hidden],#alLock[hidden]{display:none}
+#alBox .alH{font-weight:700;font-size:17px;margin:0 30px 4px 0;line-height:1.35}
+#alBox .alT{font-size:12px;opacity:.75;margin-bottom:8px}
+#alBox .alB{white-space:pre-line;font-size:14px;max-height:30vh;overflow:auto;margin-bottom:12px;line-height:1.5}
+#alSay{font:inherit;font-size:17px;font-weight:700;width:100%;padding:12px;border-radius:10px;border:0;background:#d93025;color:#fff;cursor:pointer}
+#alSay.on{background:#8c1d16}
+#alAuto{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:10px;cursor:pointer}
+#alAuto input{width:18px;height:18px;flex:none}
+#alX{position:absolute;top:6px;right:8px;border:0;background:none;color:inherit;font-size:24px;cursor:pointer;line-height:1;padding:4px 8px}
+#alLock{position:fixed;left:0;right:0;bottom:0;z-index:9997;background:#d93025;color:#fff;text-align:center;padding:14px 16px;font-weight:700;font-size:16px;cursor:pointer;border:0;width:100%;font-family:inherit}
+#voiceBtn.on{border-color:#d93025;color:#d93025;font-weight:700}
+</style>
+<div id="alBox" role="alertdialog" aria-labelledby="alH" hidden>
+<button id="alX" type="button" aria-label="ปิดประกาศ">×</button>
+<div class="alH" id="alH"></div><div class="alT" id="alT"></div><div class="alB" id="alBd"></div>
+<button id="alSay" type="button"><span id="alIc">🔊</span> ฟังประกาศเตือนภัย</button>
+<label id="alAuto"><input type="checkbox" id="alChk"> อ่านประกาศเตือนภัยออกเสียงอัตโนมัติ เมื่อเปิดหน้านี้ค้างไว้</label>
+</div>
+<button id="alLock" type="button" hidden>🔇 แตะที่นี่เพื่อเปิดเสียงเตือนภัยอัตโนมัติ</button>
+<script>(function(){
+/* ประกาศเตือนภัยอ่านออกเสียง
+   ข้อ 1: แตะแจ้งเตือน (Web Push) → เปิดเว็บแอปพร้อมกล่องประกาศ + ปุ่ม 🔊 ฟังประกาศ
+   ข้อ 2: โหมด "เสียงเตือนภัย" — เปิดหน้านี้ค้างไว้ มีประกาศใหม่ → เสียงสัญญาณ + อ่านให้ฟังทันที (เช็กทุก 1 นาที) */
+const box=document.getElementById('alBox'),H=document.getElementById('alH'),T=document.getElementById('alT'),BD=document.getElementById('alBd'),
+ SB=document.getElementById('alSay'),IC=document.getElementById('alIc'),CHK=document.getElementById('alChk'),LK=document.getElementById('alLock'),VB=document.getElementById('voiceBtn');
+if(!box)return;
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}return null};
+let AUTO=ls('pn-al-voice')==='1',seen=+(ls('pn-al-seen')||0),cur=null,pending=null,activated=false,wl=null,base=null,baseT=0;
+const qid=new URLSearchParams(location.search).get('alert');
+const gh=location.hostname.match(/^([^.]+)\.github\.io$/);
+const raw=f=>{const seg=location.pathname.split('/').filter(Boolean)[0]||(gh[1]+'.github.io');return 'https://raw.githubusercontent.com/'+gh[1]+'/'+seg+'/main/'+f+'?'+Date.now()};
+window.PN_VOICE_ON=()=>AUTO;
+const hasAct=()=>activated||!!(navigator.userActivation&&navigator.userActivation.hasBeenActive);
+// ปุ่มเสียงของแชต (say) เปลี่ยนไอคอนผ่าน textContent/classList — ส่งตัวแทนที่เปลี่ยนเฉพาะไอคอนของปุ่มใหญ่
+const proxy={classList:{add:c=>SB.classList.add(c),remove:c=>SB.classList.remove(c),contains:c=>SB.classList.contains(c)},
+ set textContent(v){IC.textContent=v},get textContent(){return IC.textContent}};
+const sayText=a=>('ประกาศจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคม\n'+(a.say||((a.title||'')+'\n'+(a.body||'')))).replace(/\s*→\s*/g,' เป็น ').split('\n').map(l=>l.trim()).filter(Boolean).join(',\n');   // จบบรรทัดด้วยจุลภาค = เว้นจังหวะ และตัดช่วงพูดตรงนั้น ไม่ตัดกลางคำ
+function stop(){if(window.PNV)window.PNV.stop();SB.classList.remove('on');IC.textContent='🔊'}
+function speak(a){if(!window.PNV||!a)return;window.PNV.unlock();window.PNV.say(sayText(a),proxy)}
+function chime(){try{const ac=window.PNV&&window.PNV.ac();if(!ac||ac.state!=='running')return 0;const t0=ac.currentTime+0.05;
+ [0,0.4,0.8].forEach((d,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=i===2?988:880;
+  g.gain.setValueAtTime(0.0001,t0+d);g.gain.exponentialRampToValueAtTime(0.35,t0+d+0.03);g.gain.exponentialRampToValueAtTime(0.0001,t0+d+0.32);
+  o.connect(g);g.connect(ac.destination);o.start(t0+d);o.stop(t0+d+0.35)});return 1400}catch(e){return 0}}
+function fmtT(t){try{return 'ประกาศเมื่อ '+new Date(t).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' น.'}catch(e){return ''}}
+function show(a){cur=a;H.textContent=a.title||'ประกาศเตือนภัยน้ำพนัสนิคม';T.textContent=fmtT(a.t)+(a.test?' · ข้อความทดสอบ':'');BD.textContent=a.body||'';CHK.checked=AUTO;box.hidden=false}
+function markSeen(a){if(a&&a.id>seen){seen=a.id;ls('pn-al-seen',String(seen))}}
+function autoPlay(a){if(hasAct()){pending=null;const w=chime();setTimeout(()=>speak(a),w)}else{pending=a;LK.hidden=false}}
+async function tunBase(){if(base!==null&&Date.now()-baseT<600000)return base;base='';baseT=Date.now();
+ try{const r=await fetch(raw('data/chat_ep.json'),{cache:'no-store'});if(r.ok){const j=await r.json();if(/^https:\/\/[^\s]+\/api\/chat$/.test(j.url||''))base=j.url.replace(/\/api\/chat$/,'')}}catch(e){}return base}
+async function load(){const src=[];
+ if(gh){const b=await tunBase();if(b)src.push(b+'/data/alert.json?'+Date.now());src.push(raw('data/alert.json'))}   // เซิร์ฟเวอร์ (สดที่สุด) → GitHub
+ src.push('data/alert.json?'+Date.now());
+ for(const x of src){try{const r=await fetch(x,{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&j.id)return j}}catch(e){}}return null}
+let busy=false,tries=0;
+async function tick(first){if(busy)return;busy=true;try{const a=await load();if(!a)return;const age=Date.now()-Date.parse(a.t||0);
+  if(first&&qid){if(String(a.id)!==qid&&tries++<6){setTimeout(()=>tick(true),15000)}show(a);markSeen(a);return}   // เปิดจากแจ้งเตือน: แสดงประกาศ + ปุ่มฟัง
+  if(a.id<=seen)return;markSeen(a);
+  if(first&&!AUTO){if(age<6*3600e3)show(a);return}      // เปิดหน้าเว็บเอง: แสดงประกาศที่ยังใหม่ (ไม่เกิน 6 ชม.) ไม่อ่านเอง
+  show(a);if(AUTO&&age<3*3600e3)autoPlay(a)}
+ catch(e){}finally{busy=false}}
+async function wake(){try{if(AUTO&&!wl&&'wakeLock' in navigator&&document.visibilityState==='visible'){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}catch(e){}}
+function tip(h){const t=document.getElementById('instTip');if(!t)return;t.innerHTML=h+'<button type="button" aria-label="ปิด">×</button>';t.hidden=false;t.querySelector('button').onclick=()=>{t.hidden=true}}
+function ui(){if(VB){VB.classList.toggle('on',AUTO);VB.textContent=AUTO?'🔊 เสียงเตือนภัย: เปิด':'🔈 เสียงเตือนภัย';VB.setAttribute('aria-pressed',AUTO?'true':'false')}CHK.checked=AUTO}
+function setAuto(v){AUTO=v;ls('pn-al-voice',v?'1':'0');ui();LK.hidden=true;
+ if(v){activated=true;if(window.PNV)window.PNV.unlock();wake();
+  tip('🔊 เปิดเสียงเตือนภัยแล้วค่ะ เปิดหน้านี้ค้างไว้ (อย่าปิดจอหรือสลับไปแอปอื่น) เมื่อมีประกาศใหม่จะมีเสียงสัญญาณและอ่านประกาศให้ฟังทันที · ถ้าหน้าเว็บถูกโหลดใหม่ ให้แตะหน้าจอหนึ่งครั้งเพื่อเปิดเสียงอีกครั้ง');
+  if(window.PNV)window.PNV.say('เปิดเสียงเตือนภัยแล้วค่ะ ถ้ามีประกาศใหม่ จะอ่านให้ฟังทันที',null)}
+ else{stop();try{wl&&wl.release()}catch(e){}wl=null}}
+if(VB)VB.onclick=()=>setAuto(!AUTO);
+CHK.onchange=()=>setAuto(CHK.checked);
+SB.onclick=()=>{activated=true;if(SB.classList.contains('on')){stop();return}speak(cur)};
+document.getElementById('alX').onclick=()=>{stop();box.hidden=true};
+// แตะครั้งแรกหลังโหลดหน้า = ปลดล็อกเสียง (เบราว์เซอร์บล็อกเสียงจนกว่าผู้ใช้จะแตะ)
+document.addEventListener('pointerdown',()=>{if(activated)return;activated=true;if(!AUTO)return;if(window.PNV)window.PNV.unlock();LK.hidden=true;wake();
+ if(pending){const a=pending;pending=null;setTimeout(()=>{const w=chime();setTimeout(()=>speak(a),w)},300)}},true);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){wake();tick()}});
+ui();if(AUTO&&!hasAct())LK.hidden=false;
+setTimeout(()=>tick(true),1500);
+setInterval(()=>{if(AUTO||!document.hidden)tick()},60000);
 })();</script>
 </body>
 </html>
