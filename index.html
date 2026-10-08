@@ -286,14 +286,16 @@ function trendFactors(){if(!D)return null;const F=[],now=Date.now(),wl=D.wl||[],
  const U=['นฤบดินทรจินดา','ขุนด่านปราการชล','คลองสียัด'].map(n=>[n,getRes(n)]).filter(x=>x[1]);if(U.length){const so=U.reduce((a,x)=>a+(+x[1].o||0),0),hi=U.filter(x=>(x[1].pct||0)>=95&&(+x[1].i||0)>(+x[1].o||0)).map(x=>x[0]);F.push([hi.length?'↑':'→','อ่างใหญ่ต้นน้ำบางปะกง',U.map(x=>`${x[0]} ${fx(x[1].pct,0)}%`).join(' · ')+` · ระบายรวม ${fx(so,1)} ล้าน ลบ.ม./วัน`+(hi.length?` (${hi.join(', ')} ใกล้เต็มและน้ำเข้ามากกว่าระบาย อาจต้องระบายเพิ่ม)`:'')])}
  const TR=typeof FLTBR!=='undefined'&&FLTBR||[];if(TR.length){const fl=TR.filter(r=>r.lv==='flood'),gs=TR.reduce((a,r)=>a+(r.g||0),0);F.push(['•','ดาวเทียม GISTDA',(gs?`น้ำท่วมขังรวม ~${fx(gs,0)} ไร่`:'ไม่พบน้ำท่วมขัง')+(fl.length?' · จุดน้ำท่วม: '+fl.map(r=>'ต.'+r.n).join(', '):'')])}
  const fo=typeof fieldOn==='function'&&fieldOn(),co=typeof CANAL!=='undefined'&&CANAL&&CANAL.t&&(now-new Date(CANAL.t))/36e5<=(CANAL.ttl||24);F.push([fo||co?'↑':'→','รายงานจากพื้นที่',fo?'มีรายงานน้ำท่วมในตัวเมือง':co?'คลองในเมืองน้ำสูง':'ไม่มีรายงานน้ำท่วมใน 24 ชม.']);
- let sc=0;const why=[];if(dT){sc+=dT;why.push('คลองหลวงที่บ้านท่าบุญมี'+(dT>0?'สูงขึ้น':'ลดลง'))}
- if(st!=null){if(KOx||(st>KL_MAX&&nt>0.01)){sc+=2;why.push('อ่างคลองหลวงล้นลงคลอง')}else if(nt<-0.01){sc-=1;why.push('อ่างคลองหลวงระบายมากกว่าน้ำเข้า')}}
- if(dB){sc+=dB;why.push('แม่น้ำบางปะกง'+(dB>0?'สูงขึ้น':'ลดลง'))}
- const mx=Math.max(f24,bf24);if(mx>=10){sc+=mx>=35?2:1;why.push(`คาดฝน ~${fx(mx,0)} มม. ใน 24 ชม.`)}if(fo)sc+=1;
- let s=(sc>=2?'น้ำมีแนวโน้มสูงขึ้น':sc<=-2?'น้ำมีแนวโน้มลดลงช้า ๆ':'น้ำทรงตัว')+' ใน 24–48 ชม.'+(why.length?` (${why.join(' · ')})`:'');
- if(p4!=null&&p4>=100)s+=' แต่บางปะกงยังล้นตลิ่ง น้ำท่วมขังจะลดช้า';
- const wet=fd.filter(r=>r[1]>=15).map(r=>`${dm(r[0])} ~${fx(r[1],0)} มม.`);if(wet.length)s+=` · ช่วงต่อไปคาดฝนเพิ่ม ${wet.slice(0,3).join(', ')} เฝ้าระวังน้ำกลับมาสูงขึ้น`;else if(fd.length&&s3<10)s+=' · 3 วันข้างหน้าฝนน้อย';
- return {s,F,lv:sc>=2||wet.length?'warn':sc<=-2?'ok':'watch'}}
+ let sc=0;const why=[];if(dT){sc+=dT;why.push(dT>0?'คลองหลวงสูงขึ้นเล็กน้อย':'คลองหลวงลดลง')}
+ if(st!=null){if(KOx||(st>KL_MAX&&nt>0.01)){sc+=2;why.push('อ่างคลองหลวงมีน้ำล้นลงคลอง')}else if(nt<-0.01){sc-=1;why.push('อ่างคลองหลวงกำลังระบายน้ำลง')}}
+ if(dB){sc+=dB;why.push(dB>0?'แม่น้ำบางปะกงสูงขึ้น':'แม่น้ำบางปะกงเริ่มลด')}
+ const mx=Math.max(f24,bf24);if(mx>=10){sc+=mx>=35?2:1;why.push(mx>=35?'ฝนตกหนัก':'มีฝนตก')}if(fo)sc+=1;
+ const S=['1–2 วันนี้น้ำน่าจะ'+(sc>=2?'สูงขึ้น':sc<=-2?'ค่อย ๆ ลดลง':'ทรงตัว')+(why.length?` (${why.join(', ')})`:'')];
+ if(p4!=null&&p4>=100)S.push('แม่น้ำบางปะกงยังล้นตลิ่ง น้ำที่ท่วมขังจึงลดช้า');
+ const wet=fd.filter(r=>r[1]>=15);if(wet.length){const w3=wet.slice(0,3),d0=w3[0][0],d1=w3[w3.length-1][0],lo=Math.min(...w3.map(r=>r[1])),hi=Math.max(...w3.map(r=>r[1]));const rng=(+d0.slice(3,5))+(d1!==d0?'–'+(+d1.slice(3,5)):'')+' '+TMs[+d0.slice(0,2)];S.push((mx<10?'ฝนช่วงนี้น้อย แต่':'')+`วันที่ ${rng} คาดฝนตกมากขึ้น (~${fx(lo,0)}${Math.round(lo)===Math.round(hi)?'':'–'+fx(hi,0)} มม./วัน) น้ำอาจกลับมาสูงขึ้น`)}
+ else if(mx<10)S.push('ฝนช่วงนี้น้อย'+(!fd.length||s3<30?' ไม่น่าทำให้น้ำเพิ่ม':''));
+ if(U.some(x=>(x[1].pct||0)>=95&&(+x[1].i||0)>(+x[1].o||0)))S.push('อ่างใหญ่ต้นน้ำบางปะกงเกือบเต็ม อาจต้องระบายน้ำเพิ่มลงแม่น้ำ');
+ return {s:S.join(' · '),F,lv:sc>=2||wet.length?'warn':sc<=-2?'ok':'watch'}}
 const TF_KEY='↑ ทำให้น้ำเพิ่ม · ↓ ทำให้น้ำลด · → ไม่มีผลมาก · • สภาพปัจจุบัน';
 function getRes(n){return (D.res||[]).find(r=>r.n===n)}
 function getWl(c){return (D.wl||[]).find(r=>r.c===c)}
@@ -360,7 +362,7 @@ function renderAnalysis(){try{renderPublic()}catch(e){console.error(e)}const el=
  {const hr=D.hr||[],now=Date.now();const tt=r=>new Date(r[0].length<=9?(new Date().getFullYear()+'-'+r[0].replace('T',' ')+':00').replace(' ','T'):r[0]).getTime();const f24=hr.filter(r=>tt(r)>now).slice(0,24).reduce((a,r)=>a+(+r[1]||0),0);const bb=(D.bb&&D.bb.f24)||0;const mx=Math.max(f24,bb);
   let t=(mx>=35?`คาดฝนตกหนัก (~${fx(mx,0)} มม. ใน 24 ชม.) น้ำอาจเพิ่มขึ้นอีก`:mx>=10?`คาดฝนปานกลาง (~${fx(mx,0)} มม. ใน 24 ชม.)`:`ฝนลดลงแล้ว 24 ชม. ข้างหน้าคาดว่าตกเล็กน้อย (~${fx(f24,0)}–${fx(bb,0)} มม.)`);
   if(fo&&c)t+=c.rising?' · รายงานล่าสุดน้ำในเมืองยังเพิ่มขึ้น':` · น้ำในเมืองน่าจะค่อย ๆ ลด ถ้าไม่มีน้ำจากอ่างเพิ่ม คาดว่าเกือบแห้งราว ${dD(c.tEnd)}`;
-  {const tf=trendFactors();if(tf){t=tf.s+' · ฝน: '+t+'\nปัจจัยที่มีผล ('+TF_KEY+'):\n'+tf.F.map(f=>f[0]+' '+f[1]+': '+f[2]).join('\n')}}P.push([mx>=35?'warn':mx>=10||(tf0=>tf0&&tf0.lv==='warn')(trendFactors())?'watch':'ok','แนวโน้ม',t])}
+  {const tf=trendFactors();if(tf){t=tf.s}}P.push([mx>=35?'warn':mx>=10||(tf0=>tf0&&tf0.lv==='warn')(trendFactors())?'watch':'ok','แนวโน้ม',t])}
  // 4 risk
  {const r=getRes('คลองหลวง รัชชโลทร');const Xk=klScen();let s='ok',t='';if(r){t=(klObs()?`อ่างคลองหลวง รัชชโลทร น้ำล้นสปิลเวย์แล้ว (รายงานจากพื้นที่ ${thTime(klObs().t)}) ไหลลงคลองหลวงเพิ่มราว ${fx(klSpillQ(),0)} ลบ.ม./วินาที · `:'')+`อ่างคลองหลวง รัชชโลทร มีน้ำ ${fx(r.st,1)} ล้าน ลบ.ม. (${fx(r.pct,0)}% ของความจุ ${fx(r.cap||125,0)}, ข้อมูล ${dMD(r.d||'')})${r.st>(r.cap||125)?` เกินความจุ ${fx(r.st-(r.cap||125),1)} ล้าน ลบ.ม.`:''} · น้ำเข้า ${fx(r.i,2)} ระบายออก ${fx(r.o,2)} ล้าน ลบ.ม./วัน → ${(r.i||0)-(r.o||0)<-0.01?`ปริมาณน้ำลดลงวันละ ~${fx((r.o||0)-(r.i||0),2)}`:(r.i||0)-(r.o||0)>0.01?`ปริมาณน้ำเพิ่มขึ้นวันละ ~${fx((r.i||0)-(r.o||0),2)}`:'ปริมาณน้ำทรงตัว'} ล้าน ลบ.ม.`;if(r.st>(r.cap||125))s='warn';
    if(Xk){const m=Xk.sc[1];if(m.dmax){s='crit';t+=` · คาดว่าอาจล้นลงคลองหลวงราว ${dMD(m.dmax)} (สูงสุด ~${fx(m.peak,0)} ลบ.ม./วินาที) ถ้าล้นจริง น้ำในเมืองจะลดช้าลงหรือกลับมาสูงขึ้น`}else if(r.st>(r.cap||125)){const pr=Xk.sc[1].days.reduce((a,_,i)=>a+((D.kl.rain.find(x=>x[0]===_[0])||[])[1]||0),0);t+=` · แบบจำลอง 7 วัน (ฝนเหนืออ่างรวม ~${fx(pr,0)} มม. น้ำท่า ${fx(Xk.CF*100,0)}% ปรับจากน้ำเข้าที่รายงานจริง) คาดว่าน้ำในอ่างไม่เพิ่มขึ้น ยังไม่มีน้ำล้นเพิ่ม แต่ยังเกินความจุ ควรระบายต่อเนื่อง`}else if(m.d125){s='warn';t+=` · คาดว่าเกินความจุ 125 ล้าน ลบ.ม. ราว ${dMD(m.d125)} ต้องเร่งระบาย`}else t+=' · ยังรับน้ำได้'}}
@@ -388,8 +390,8 @@ function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','�
  else if(m&&m.d125){up('watch');const kr=getRes('คลองหลวง รัชชโลทร');S.push(['สถานการณ์หลัก',kr&&kr.st>(kr.cap||125)?((kr.i||0)<(kr.o||0)-0.01?`อ่างเก็บน้ำคลองหลวง (รัชชโลทร) เกินความจุ (${fx(kr.pct,0)}%) แต่ระบายออก (${fx(kr.o,2)}) มากกว่าน้ำเข้า (${fx(kr.i,2)} ล้าน ลบ.ม./วัน) ปริมาณน้ำในอ่างกำลังลดลง ยังต้องติดตามการระบาย`:`อ่างเก็บน้ำคลองหลวง (รัชชโลทร) เกินความจุ (${fx(kr.pct,0)}%) น้ำเข้ามากกว่าที่ระบาย เฝ้าระวังน้ำล้นลงคลองหลวง`):'อ่างเก็บน้ำคลองหลวงมีน้ำมาก เฝ้าระวังการปล่อยน้ำเพิ่ม'])}
  // 3 rain
  {const hr=D.hr||[],now=Date.now();const tt=r=>new Date(r[0].length<=9?(new Date().getFullYear()+'-'+r[0].replace('T',' ')+':00').replace(' ','T'):r[0]).getTime();const fut=hr.filter(r=>tt(r)>now).slice(0,24);const f24=fut.reduce((a,r)=>a+(+r[1]||0),0);const bb=(D.bb&&D.bb.f24)||0;const mx=Math.max(f24,bb);
-  const t=mx>=35?'<b>ฝนตกหนัก</b> ระวังน้ำเพิ่มเร็ว':mx>=10?'ฝนตกปานกลาง':mx>=1?'ฝนตกเล็กน้อย ไม่ทำให้น้ำเพิ่มมาก':'ไม่มีฝนหรือฝนน้อยมาก';if(mx>=35)up('warn');S.push(['ฝน 24 ชม. ข้างหน้า',`${t} (พนัสนิคม ~${fx(f24,0)} มม. ต้นน้ำบ้านบึง ~${fx(bb,0)} มม.)`])}
- {const tf=trendFactors();if(tf)S.push(['แนวโน้ม',`<b>${tf.s}</b>\n<div style="font-size:13px;color:var(--ink2);margin-top:2px">ปัจจัยที่มีผล (${TF_KEY})</div>`+tf.F.map(f=>`\n<div style="margin:2px 0 0 4px"><b style="display:inline-block;width:14px">${f[0]}</b> <b>${f[1]}:</b> ${f[2]}</div>`).join('')])}
+  const t=mx>=35?'<b>ฝนตกหนัก</b> ระวังน้ำเพิ่มเร็ว':mx>=10?'ฝนตกปานกลาง':mx>=1?'ฝนตกเล็กน้อย ไม่ทำให้น้ำเพิ่มมาก':'ไม่มีฝนหรือฝนน้อยมาก';if(mx>=35)up('warn');}
+ {const tf=trendFactors();if(tf)S.push(['แนวโน้ม',tf.s])}
  // 4 areas
  {const A=[];if(fo||(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>r.lv!=='ok')))A.push('ย่านตลาดเก่า–วัดเกาะแก้ว','สะพานหน้าอำเภอ','ริมคลองเมือง');if(TWR&&TWR[3]&&TWR[3].q>20)A.push('ริมห้วยเกวียน ฝั่งตะวันตกของเมือง');const tb=(D.wl||[]).find(w=>w.c==='Kgt.19A');if((KO&&KE.pct>=80)||(!KO&&dam)||(tb&&tb.pct>=80))A.push('ริมคลองหลวง (บ้านท่าบุญมี เกาะโพธิ์ บ้านเนินไทร ไร่หลักทอง)');if(FLRES&&FLRES.a0>1)A.push('ที่ลุ่มทางเหนือและตะวันตกของเมือง (วัดโบสถ์ วัดหลวง กุฎโง้ง ไปจนถึงพานทอง)');if(A.length)S.push(['พื้นที่ที่ควรระวัง',[...new Set(A)].join(' · ')])}
  {const IF=(typeof FLRES!=='undefined'&&FLRES&&FLRES.inFlood)||[];if(IF.length){up('warn');S.splice(1,0,['พื้นที่น้ำท่วม',IF.map(x=>x.n).join(' · ')])}}
