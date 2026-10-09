@@ -575,24 +575,26 @@ function flDrawPN(cx){if(!flShow.o||!OBS)return;const sp=obsSp();const o=sp&&OBS
   const tot=it.reduce((a,x)=>a+x[1],0)/1600;const s=FLM.K/2/FLZL();
   const PN=FLM.places&&FLM.places.find(p=>p.n==='ตัวเมืองพนัสนิคม');const [x,y]=PN?[(PN.x+0.5)*FLM.K,(PN.y+0.5)*FLM.K]:flLL(13.4517,101.1774);
   const R=(typeof FLTBR!=='undefined'&&FLTBR)||[];const rb=n=>R.find(r=>r.n===n);
-  const nfl=R.filter(r=>r.lv==='flood').length;const lv=nfl?'crit':tot>=300?'warn':'watch';const c=TWC[lv];
+  const sat30=r=>r&&r.gf!=null&&r.gf>=0.3;   // ⚠ ในกล่องนี้ = ดาวเทียมเห็นน้ำท่วม ≥30% ของตำบล (ไม่รวมแบบจำลอง)
+  const nfl=it.filter(([k])=>sat30(rb(k))).length;const MF=R.filter(r=>r.lv==='flood'&&!sat30(r));
+  const lv=nfl||MF.length?'crit':tot>=300?'warn':'watch';const c=TWC[lv];
   const dts=(o.dates&&o.dates.length?o.dates:[...new Set((o.features||[]).map(f=>String((f.properties||{})._createdAt||'').slice(0,10)).filter(Boolean))]).slice().sort();const dl=dts.length?new Date(dts[dts.length-1]+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'';
-  const H=[`อ.พนัสนิคม · ดาวเทียม${dl?' '+dl:''}`,`น้ำท่วมขังรวม ~${fx(tot,0)} ไร่ · ${it.length} ตำบล`+(nfl?` · จุดน้ำท่วม ${nfl}`:'')];
+  const H=[`อ.พนัสนิคม · ดาวเทียม${dl?' '+dl:''}`,`น้ำท่วมขังรวม ~${fx(tot,0)} ไร่ · ${it.length} ตำบล`+(nfl?` · ท่วม ≥30% ${nfl} ตำบล`:'')];
   // เทศบาลเมืองพนัสนิคม (ต.พนัสนิคม): น้ำท่วมขังจากดาวเทียม + ระดับคลองในเมือง + รายงานจากพื้นที่
   const tw=TB['พนัสนิคม']||0,tc=(typeof TWR!=='undefined'&&TWR)?Math.max(0,...[TWR[4],TWR[1],TWR[2]].filter(Boolean).map(r=>+r.pct||0)):null,fo=typeof fieldOn==='function'&&fieldOn();
   const MU=`เทศบาลเมืองพนัสนิคม: `+(fo?`รายงานน้ำท่วม ${fx(FIELD.dlo,1)}–${fx(FIELD.dhi,1)} ม.`:tw>=1600?`ท่วมขัง ~${fx(tw/1600,0)} ไร่`:'ไม่พบน้ำท่วมขัง')+(tc!=null?` · คลอง ~${fx(tc,0)}% ตลิ่ง`:'');
   const muc=fo||(tc!=null&&tc>=100)?TWC.crit:(tc!=null&&tc>=80)||tw>=50*1600?TWC.warn:(tc!=null&&tc>=60)?TWC.watch:TWC.ok;
-  const I=it.map(([k,v])=>{const r=rb(k);return {t:`${k} ${fx(v/1600,0)} ไร่`+(r&&r.gf!=null&&r.gf>=0.005?` (${fx(r.gf*100,0)}%)`:''),f:r&&r.lv==='flood'}});
+  const I=it.map(([k,v])=>{const r=rb(k);return {t:`${k} ${fx(v/1600,0)} ไร่`+(r&&r.gf!=null&&r.gf>=0.005?` (${fx(r.gf*100,0)}%)`:''),f:sat30(r)}});
   const nr=Math.ceil(I.length/2),F='(%) = สัดส่วนของพื้นที่ตำบล';
   cx.save();cx.font=`700 ${11.5*s}px system-ui,sans-serif`;const w0=cx.measureText(H[0]).width;cx.font=`600 ${10*s}px system-ui,sans-serif`;
-  const cw=Math.max(...I.map(r=>cx.measureText(r.t+(r.f?' ⚠':'')).width))+8*s;const bw=Math.max(w0,cx.measureText(H[1]).width,cx.measureText(MU).width,cx.measureText(F).width,2*cw)+12*s;const bh=(10+13*(3+nr)+13)*s;
+  const cw=Math.max(...I.map(r=>cx.measureText(r.t+(r.f?' ⚠':'')).width))+8*s;const MT0=MF.length?`แบบจำลองคาดท่วม ≥30%: `+MF.map(r=>`${r.n} ${fx(r.fc*100,0)}%`).join(', '):'';const bw=Math.max(w0,cx.measureText(H[1]).width,cx.measureText(MU).width,cx.measureText(F).width,MT0?cx.measureText(MT0).width:0,2*cw)+12*s;const MT=MF.length?`แบบจำลองคาดท่วม ≥30%: `+MF.map(r=>`${r.n} ${fx(r.fc*100,0)}%`).join(', '):'';const ex=MT?1:0;const bh=(10+13*(3+ex+nr)+13)*s;
   const bx=x-420*s,by=y+140*s;   // ตำแหน่งเทียบกับตัวเมือง (หน่วยเดียวกับกล่องอื่น จึงไม่ทับกันทุกระดับซูม)
   cx.beginPath();cx.moveTo(x,y);cx.lineTo(bx+bw,by+12*s);cx.lineWidth=1.5*s;cx.strokeStyle=c;cx.setLineDash([4*s,3*s]);cx.stroke();cx.setLineDash([]);
   cx.beginPath();cx.arc(x,y,4*s,0,7);cx.fillStyle=c;cx.fill();cx.lineWidth=1.5*s;cx.strokeStyle='#fff';cx.stroke();
   cx.strokeStyle=c;cx.lineWidth=1.5*s;cx.fillStyle='rgba(255,255,255,.62)';cx.beginPath();cx.rect(bx,by,bw,bh);cx.fill();cx.stroke();
-  cx.fillStyle=c;cx.font=`700 ${11.5*s}px system-ui,sans-serif`;cx.fillText(H[0],bx+6*s,by+14*s);cx.font=`600 ${10*s}px system-ui,sans-serif`;cx.fillText(H[1],bx+6*s,by+27*s);cx.fillStyle=muc;cx.font=`700 ${10*s}px system-ui,sans-serif`;cx.fillText(MU,bx+6*s,by+40*s);cx.font=`600 ${10*s}px system-ui,sans-serif`;
-  I.forEach((r,i)=>{const col=i<nr?0:1,row=i%nr;cx.fillStyle=r.f?TWC.crit:'#333';cx.fillText(r.t+(r.f?' ⚠':''),bx+6*s+col*cw,by+(53+13*row)*s)});
-  cx.fillStyle='#666';cx.font=`500 ${9*s}px system-ui,sans-serif`;cx.fillText(F+(I.some(r=>r.f)?' · ⚠ จุดน้ำท่วม (ท่วม ≥30%)':''),bx+6*s,by+(53+13*nr)*s);cx.restore()}
+  cx.fillStyle=c;cx.font=`700 ${11.5*s}px system-ui,sans-serif`;cx.fillText(H[0],bx+6*s,by+14*s);cx.font=`600 ${10*s}px system-ui,sans-serif`;cx.fillText(H[1],bx+6*s,by+27*s);cx.fillStyle=muc;cx.font=`700 ${10*s}px system-ui,sans-serif`;cx.fillText(MU,bx+6*s,by+40*s);cx.font=`600 ${10*s}px system-ui,sans-serif`;if(MT){cx.fillStyle=TWC.warn;cx.fillText(MT,bx+6*s,by+53*s)}
+  I.forEach((r,i)=>{const col=i<nr?0:1,row=i%nr;cx.fillStyle=r.f?TWC.crit:'#333';cx.fillText(r.t+(r.f?' ⚠':''),bx+6*s+col*cw,by+(53+13*(row+ex))*s)});
+  cx.fillStyle='#666';cx.font=`500 ${9*s}px system-ui,sans-serif`;cx.fillText(F+(I.some(r=>r.f)?' · ⚠ ดาวเทียมเห็นท่วม ≥30% ของตำบล':''),bx+6*s,by+(53+13*(nr+ex))*s);cx.restore()}
 function flTambonRisk(dep,TWO,Qr,zb){const el=$('flTB');if(!FLM.TB||!FLM.tbi){if(el)el.innerHTML='<tr><td class="empty">ไม่มีข้อมูลขอบเขตตำบล</td></tr>';return null}
  const n=FLM.tbi.length,tot=new Array(n+1).fill(0),fl=new Array(n+1).fill(0),dp=new Array(n+1).fill(0),TB=FLM.TB,ca=FLM.ca;
  for(let p=0;p<TB.length;p++){const k=TB[p];if(!k)continue;tot[k]++;if(dep[p]||(TWO&&TWO[p])){fl[k]++;if(dep[p]>0.5)dp[k]++}}
