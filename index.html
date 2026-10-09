@@ -1101,10 +1101,13 @@ if(SS){pickV();SS.onvoiceschanged=pickV;setTimeout(pickV,800);setTimeout(pickV,3
 let AC=null,acSrc=null,sayUnlocked=false;function getAC(){try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(C)AC=new C()}if(AC&&AC.state==='suspended')AC.resume()}catch(e){}return AC}
 function unlockSay(){getAC();if(!SS)return;pickV();if(sayUnlocked)return;sayUnlocked=true;try{const u=new SpeechSynthesisUtterance('.');u.volume=0;u.rate=2;u.lang='th-TH';if(thV)u.voice=thV;SS.speak(u)}catch(e){}}
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#cbBox,#cbBtn'))unlockSay()},true);
+const SAY_MON=[['ม.ค.','มกราคม'],['ก.พ.','กุมภาพันธ์'],['มี.ค.','มีนาคม'],['เม.ย.','เมษายน'],['พ.ค.','พฤษภาคม'],['มิ.ย.','มิถุนายน'],['ก.ค.','กรกฎาคม'],['ส.ค.','สิงหาคม'],['ก.ย.','กันยายน'],['ต.ค.','ตุลาคม'],['พ.ย.','พฤศจิกายน'],['ธ.ค.','ธันวาคม']];
 function sayClean(t){const L=[];t=String(t).replace(/(\d),(?=\d{3}(?!\d))/g,'$1');   // ตัดจุลภาคคั่นหลักพัน (15,748 → 15748) ไม่ให้ถูกตัดเป็นสองท่อนตอนอ่าน
  for(let l of String(t).split('\n')){l=l.trim();if(!l||/^(ดูรายละเอียด|ลิงก์สำรอง|แหล่งข้อมูลจากเว็บ|\(น้องหยดน้ำเป็น AI|\(สรุปอัตโนมัติ|\(ข้อมูลอัตโนมัติ)/.test(l))continue;
  l=l.replace(/https?:\/\/\S+/g,'').replace(/[\u{1F000}-\u{1FAFF}☀-➿️‍]/gu,'').replace(/[•*]/g,'').replace(/·/g,',').replace(/→/g,'ไป').replace(/~/g,'ประมาณ ').trim();if(l)L.push(l)}
- let x=L.join(' ');for(const [a,b] of [['ล้าน ลบ.ม.','ล้านลูกบาศก์เมตร'],['ลบ.ม./วินาที','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม./วิ','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม.','ลูกบาศก์เมตร'],['มม./วัน','มิลลิเมตรต่อวัน'],['มม.','มิลลิเมตร'],['ซม.','เซนติเมตร'],['กม.','กิโลเมตร'],['ชม.','ชั่วโมง'],['/วัน','ต่อวัน'],['%',' เปอร์เซ็นต์'],['อ.','อำเภอ'],['จ.','จังหวัด']])x=x.split(a).join(b);
+ let x=L.join(' ');for(const [a,b] of SAY_MON)x=x.replace(new RegExp('(^|[^ก-๙])'+a.replace(/\./g,'\\.')+'(?![ก-๙])','g'),'$1'+b);   // เดือนตัวย่อ → ชื่อเต็ม (ก่อนแปลง ต./อ./จ.)
+ x=x.replace(/(^|[^ก-๙])พ\.ศ\./g,'$1พุทธศักราช').replace(/(\d{1,2}[:.]\d{2})\s*น\.(?![ก-๙])/g,'$1 นาฬิกา');
+ for(const [a,b] of [['ล้าน ลบ.ม.','ล้านลูกบาศก์เมตร'],['ลบ.ม./วินาที','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม./วิ','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม.','ลูกบาศก์เมตร'],['มม./วัน','มิลลิเมตรต่อวัน'],['มม.','มิลลิเมตร'],['ซม.','เซนติเมตร'],['กม.','กิโลเมตร'],['ชม.','ชั่วโมง'],['/วัน','ต่อวัน'],['%',' เปอร์เซ็นต์'],['อ.','อำเภอ'],['จ.','จังหวัด']])x=x.split(a).join(b);
  return x.replace(/(^|[^ก-๙])ต\.(?=[ก-๙])/g,'$1ตำบล').replace(/\s+/g,' ').trim()}
 function sayOff(btn){if(btn){btn.classList.remove('on');btn.textContent='🔊'}}
 function sayStop(){try{SS&&SS.cancel()}catch(e){}try{if(acSrc){acSrc.onended=null;acSrc.stop()}}catch(e){}acSrc=null;LG.querySelectorAll('.cbSay.on').forEach(b=>sayOff(b))}
