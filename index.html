@@ -470,7 +470,7 @@ async function flLoad(){if(FLM)return;try{const m=await (await fetch('data/flmod
 function flStage(r,Q){const c=FLM.rc[r],hs=FLM.hs;if(Q<=0)return 0;if(Q>=c[c.length-1])return hs[hs.length-1];let k=1;while(c[k]<Q)k++;const a=c[k-1],b=c[k];return hs[k-1]+(b>a?(Q-a)/(b-a):0)*(hs[k]-hs[k-1])}
 function flAutoVals(){const X=D?klScen():null;const pk=X?Math.round(X.sc[1].peak||0):0;const tb=getWl('Kgt.19A');let qT=null,qsrc='';if(tb){if(tb.q!=null&&!isNaN(tb.q)){qT=+tb.q;qsrc='วัดจริง'}else if(tb.pct!=null){qT=54*Math.pow(Math.max(tb.pct,0)/100,1.67);qsrc='ประมาณจากระดับน้ำ'}}const kr=getRes('คลองหลวง รัชชโลทร');const rel=kr?(kr.o||0)*1e6/86400+((klObs()||(+kr.st||0)>(kr.cap||125))?klSpillQ():0):0;const q=Math.round(Math.max(qT??rel,rel));
  const hr=(D&&D.hr)||[];const pl=Math.round(hr.slice(0,24).reduce((a,r)=>a+(r[1]||0),0)*10)/10;
- const bb=(D&&D.bb)||{};const pb=Math.round(Math.max((bb.p72||0)/3,bb.f24||0,bb.g24||0)*10)/10;
+ const bb=(D&&D.bb)||{};const pb=Math.round(Math.max((bb.p72||0)/3,bb.g24||0)*10)/10;   /* ฝนที่ตกแล้วเท่านั้น (ไม่รวมพยากรณ์ f24) — ตรงกับเซิร์ฟเวอร์ */
  const w1=getWl('BPK001'),w4=getWl('BPK004');const zb=w1&&w4?Math.round((w1.h+0.23*(w4.h-w1.h))*100)/100:(w1?w1.h+0.5:2.4);
  return {q,pl,pb,zb,pk,qT,qsrc,tbt:tb?tb.t:'',dmax:X&&X.sc[1].dmax}}
 function obsSp(){if(!OBS)return null;const n=x=>x?((x.features||[]).length||x.cells||0):0;for(const sp of [flSpan,flSpan==='1day'?'3days':'1day','7days','last'])if(n(OBS[sp]))return sp;return null}
