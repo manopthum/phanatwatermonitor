@@ -573,8 +573,7 @@ function flDrawPN(cx){if(!flShow.o||!OBS)return;const sp=obsSp();const o=sp&&OBS
    const g=f.geometry||{};const P=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];for(const pg of P){const r=pg&&pg[0];if(r&&r[0]){ax+=r[0][0]*a;ay+=r[0][1]*a;an+=a}}}
   const it=Object.entries(TB).filter(([k,v])=>v>=1600).sort((a,b)=>b[1]-a[1]);if(!it.length)return;
   if(!an&&typeof TAMBON!=='undefined')for(const [k,v] of it){const t=TAMBON.find(t=>t.a==='พนัสนิคม'&&'ต.'+t.n===k);if(t&&t.c){ax+=t.c[1]*v;ay+=t.c[0]*v;an+=v}}   // ไม่มีรูปแปลง → ศูนย์กลางตำบลถ่วงตามพื้นที่น้ำท่วม
-  if(!an)return;
-  const tot=it.reduce((a,x)=>a+x[1],0)/1600;const s=FLM.K/2/FLZL();const [x,y]=flLL(ay/an,ax/an);
+  const tot=it.reduce((a,x)=>a+x[1],0)/1600;const s=FLM.K/2/FLZL();const PN=FLM.places&&FLM.places.find(p=>p.n==='ตัวเมืองพนัสนิคม');const [x,y]=PN?[(PN.x+0.5)*FLM.K,(PN.y+0.5)*FLM.K]:flLL(13.4517,101.1774);
   const R=(typeof FLTBR!=='undefined'&&FLTBR)||[];const rb=n=>R.find(r=>'ต.'+r.n===n||r.n===n.replace(/^ต\./,''));
   const nfl=R.filter(r=>r.lv==='flood').length;const lv=nfl?'crit':tot>=300?'warn':'watch';const c=TWC[lv];
   const dts=(o.dates&&o.dates.length?o.dates:[...new Set((o.features||[]).map(f=>String((f.properties||{})._createdAt||'').slice(0,10)).filter(Boolean))]).slice().sort();const dl=dts.length?new Date(dts[dts.length-1]+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'';
