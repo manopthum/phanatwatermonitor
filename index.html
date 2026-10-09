@@ -1101,11 +1101,19 @@ if(SS){pickV();SS.onvoiceschanged=pickV;setTimeout(pickV,800);setTimeout(pickV,3
 let AC=null,acSrc=null,sayUnlocked=false;function getAC(){try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(C)AC=new C()}if(AC&&AC.state==='suspended')AC.resume()}catch(e){}return AC}
 function unlockSay(){getAC();if(!SS)return;pickV();if(sayUnlocked)return;sayUnlocked=true;try{const u=new SpeechSynthesisUtterance('.');u.volume=0;u.rate=2;u.lang='th-TH';if(thV)u.voice=thV;SS.speak(u)}catch(e){}}
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#cbBox,#cbBtn'))unlockSay()},true);
+const SAY_DG='ศูนย์ หนึ่ง สอง สาม สี่ ห้า หก เจ็ด แปด เก้า'.split(' '),SAY_HOT='1669|1784|1567|1111|1182|1155|1146|1460|1300|1554|1646|1677|1123|1193|1197|191|199';
+const sayDig=n=>[...n].filter(c=>c>='0'&&c<='9').map(c=>SAY_DG[+c]).join(' ');
+function sayPhones(x){   // เบอร์โทรอ่านทีละตัว: 1669 → หนึ่ง หก หก เก้า
+ const unit='(?!\\s*(?:ล้าน|ลบ|ลูกบาศก์|มม|มิลลิ|ซม|เซนติ|ม\\.|เมตร|%|เปอร์|คน|ครัว|ไร่|กม|กิโล|ราย|หลัง|บาท|แห่ง|จุด|ตัน))';
+ x=x.replace(/(^|[^\d])(0\d{1,2}(?:[- ]?\d{3,4}){2})(?!\d)/g,(m,p,n)=>p+(/[- ]/.test(n)?n.split(/[- ]/).filter(Boolean).map(sayDig).join(', '):sayDig(n)));
+ x=x.replace(new RegExp('(^|[^\\d.,])('+SAY_HOT+')(?![\\d.,]\\d|\\d)'+unit,'g'),(m,p,n)=>p+sayDig(n));
+ return x.replace(/((?:โทร|สายด่วน|เบอร์|หมายเลข)[^\d\n]{0,12})(1\d{2,3})(?![\d.,]\d|\d)/g,(m,p,n)=>p+sayDig(n))}
 const SAY_MON=[['ม.ค.','มกราคม'],['ก.พ.','กุมภาพันธ์'],['มี.ค.','มีนาคม'],['เม.ย.','เมษายน'],['พ.ค.','พฤษภาคม'],['มิ.ย.','มิถุนายน'],['ก.ค.','กรกฎาคม'],['ส.ค.','สิงหาคม'],['ก.ย.','กันยายน'],['ต.ค.','ตุลาคม'],['พ.ย.','พฤศจิกายน'],['ธ.ค.','ธันวาคม']];
 function sayClean(t){const L=[];t=String(t).replace(/(\d),(?=\d{3}(?!\d))/g,'$1');   // ตัดจุลภาคคั่นหลักพัน (15,748 → 15748) ไม่ให้ถูกตัดเป็นสองท่อนตอนอ่าน
  for(let l of String(t).split('\n')){l=l.trim();if(!l||/^(ดูรายละเอียด|ลิงก์สำรอง|แหล่งข้อมูลจากเว็บ|\(น้องหยดน้ำเป็น AI|\(สรุปอัตโนมัติ|\(ข้อมูลอัตโนมัติ)/.test(l))continue;
  l=l.replace(/https?:\/\/\S+/g,'').replace(/[\u{1F000}-\u{1FAFF}☀-➿️‍]/gu,'').replace(/[•*]/g,'').replace(/·/g,',').replace(/→/g,'ไป').replace(/~/g,'ประมาณ ').trim();if(l)L.push(l)}
  let x=L.join(' ');for(const [a,b] of SAY_MON)x=x.replace(new RegExp('(^|[^ก-๙])'+a.replace(/\./g,'\\.')+'(?![ก-๙])','g'),'$1'+b);   // เดือนตัวย่อ → ชื่อเต็ม (ก่อนแปลง ต./อ./จ.)
+ x=sayPhones(x);
  x=x.replace(/(^|[^ก-๙])พ\.ศ\./g,'$1พุทธศักราช').replace(/(\d{1,2}[:.]\d{2})\s*น\.(?![ก-๙])/g,'$1 นาฬิกา');
  for(const [a,b] of [['ล้าน ลบ.ม.','ล้านลูกบาศก์เมตร'],['ลบ.ม./วินาที','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม./วิ','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม.','ลูกบาศก์เมตร'],['มม./วัน','มิลลิเมตรต่อวัน'],['มม.','มิลลิเมตร'],['ซม.','เซนติเมตร'],['กม.','กิโลเมตร'],['ชม.','ชั่วโมง'],['/วัน','ต่อวัน'],['%',' เปอร์เซ็นต์'],['อ.','อำเภอ'],['จ.','จังหวัด']])x=x.split(a).join(b);
  return x.replace(/(^|[^ก-๙])ต\.(?=[ก-๙])/g,'$1ตำบล').replace(/\s+/g,' ').trim()}
