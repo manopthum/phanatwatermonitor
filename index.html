@@ -381,7 +381,7 @@ function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','�
  const fo=fieldOn(),c=fo?fieldFc():null;
  if(fo){up('crit');S.push(['ตอนนี้',`ในตัวเมืองพนัสนิคม<b>น้ำท่วม</b> สูงประมาณ ${cm(FIELD.dlo)}–${cm(FIELD.dhi)} ซม. (${body(FIELD.dlo)}ถึง${body(FIELD.dhi).replace('ประมาณ','')}) ตามรายงานจากพื้นที่ ${thTime(FIELD.t)}`])}
  else if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>r.lv==='crit'||r.lv==='warn')){up('warn');S.push(['ตอนนี้','คลองในตัวเมือง (คลองเมือง ย่านตลาดเก่า–วัดเกาะแก้ว สะพานหน้าอำเภอ) <b>น้ำเกือบเต็มตลิ่ง</b> อาจล้นเข้าถนนและบ้านเรือนริมคลองได้'])}
- else S.push(['ตอนนี้','ไม่มีรายงานน้ำท่วมในตัวเมืองใน 24 ชม. ที่ผ่านมา']);
+ else{S.push(['ตอนนี้','ไม่มีรายงานน้ำท่วมในตัวเมืองใน 24 ชม. ที่ผ่านมา']);if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>(+r.pct||0)>=60))up('watch')}
  // 2 trend
  const X=typeof klScen==='function'?klScen():null,m=X?X.sc[1]:null;const dam=m&&m.dmax;const KO=klObs();const KE=KO?tbmEst():null;if(KO)up(KE.pct>=100?'crit':KE.pct>=80?'warn':'watch');
  if(fo&&c){if(c.rising){S.push(['สถานการณ์หลัก','<b>น้ำยังเพิ่มขึ้น</b> ขอให้เตรียมพร้อมย้ายของขึ้นที่สูง'])}else{S.push(['สถานการณ์หลัก',`น้ำ<b>กำลังค่อย ๆ ลด</b> แต่ลดช้า คาดว่าอีก 12 ชม. จะเหลือ${body((c.lo12+c.hi12)/2)} และน่าจะลดจนเกือบแห้งราว ${hm(c.tEnd)}`+(KO?` <b>อย่างไรก็ตาม</b> อ่างเก็บน้ำคลองหลวง (รัชชโลทร) น้ำล้นสปิลเวย์แล้ว (รายงานจากพื้นที่ ${thTime(KO.t)}) ทำให้น้ำลดช้ากว่านี้หรือกลับมาสูงขึ้นได้`:dam?` <b>อย่างไรก็ตาม</b> อ่างเก็บน้ำคลองหลวง (รัชชโลทร) ใกล้เต็ม อาจมีน้ำล้นอ่างลงคลองหลวงราววันที่ ${dMD(m.dmax)} ทำให้น้ำลดช้ากว่านี้หรือกลับมาสูงขึ้นได้`:'')])}}
@@ -394,7 +394,7 @@ function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','�
  {const tf=trendFactors();if(tf)S.push(['แนวโน้ม',tf.s])}
  // 4 areas
  {const A=[];if(fo||(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>r.lv!=='ok')))A.push('ย่านตลาดเก่า–วัดเกาะแก้ว','สะพานหน้าอำเภอ','ริมคลองเมือง');if(TWR&&TWR[3]&&TWR[3].q>20)A.push('ริมห้วยเกวียน ฝั่งตะวันตกของเมือง');const tb=(D.wl||[]).find(w=>w.c==='Kgt.19A');if((KO&&KE.pct>=80)||(!KO&&dam)||(tb&&tb.pct>=80))A.push('ริมคลองหลวง (บ้านท่าบุญมี เกาะโพธิ์ บ้านเนินไทร ไร่หลักทอง)');if(FLRES&&FLRES.a0>1)A.push('ที่ลุ่มทางเหนือและตะวันตกของเมือง (วัดโบสถ์ วัดหลวง กุฎโง้ง ไปจนถึงพานทอง)');if(A.length)S.push(['พื้นที่ที่ควรระวัง',[...new Set(A)].join(' · ')])}
- {const IF=(typeof FLRES!=='undefined'&&FLRES&&FLRES.inFlood)||[];if(IF.length){up('warn');S.splice(1,0,['พื้นที่น้ำท่วม',IF.map(x=>x.n).join(' · ')])}}
+ {const IF=(typeof FLRES!=='undefined'&&FLRES&&FLRES.inFlood)||[];if(IF.length){const tc=TWR?Math.max(0,...[TWR[4],TWR[1],TWR[2]].filter(Boolean).map(r=>+r.pct||0)):null;const inTown=IF.some(x=>x.n==='ต.พนัสนิคม');const outT=!fo&&!inTown&&tc!=null&&tc<60;up(outT?'watch':'warn');S.splice(1,0,['พื้นที่น้ำท่วม',IF.map(x=>x.n).join(' · ')+(outT?` <span style="opacity:.8">(นอกเขตเทศบาล · คลองในเมืองยังปกติ ~${fx(tc,0)}% ของตลิ่ง)</span>`:'')])}}
  // 5 todo
  const todo=lv==='crit'?['ตัดไฟ/ปิดเบรกเกอร์ในบ้านที่น้ำท่วมถึงปลั๊ก','ไม่เดิน ไม่ขับรถ ลุยน้ำที่ไหลแรงหรือไม่เห็นพื้นถนน','ดูแลผู้สูงอายุ เด็ก ผู้ป่วย ให้อยู่ที่สูงและปลอดภัย','ระวังสัตว์มีพิษและไฟฟ้ารั่วในน้ำ','ต้มน้ำก่อนดื่ม ล้างมือบ่อย ๆ ระวังโรคน้ำกัดเท้า']:lv==='warn'?['ย้ายของมีค่าและเอกสารสำคัญขึ้นที่สูง','ย้ายรถไปจอดที่สูง','เตรียมไฟฉาย ยา อาหาร น้ำดื่ม สำหรับ 3 วัน','ติดตามประกาศจากเทศบาลและอำเภอ']:['ติดตามข่าวสารเป็นระยะ','เตรียมของใช้จำเป็นไว้ให้พร้อม'];
  S.push(['ควรทำ',todo.join(' · ')]);
