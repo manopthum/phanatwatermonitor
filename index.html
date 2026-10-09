@@ -401,9 +401,9 @@ function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','�
  S.push(['เบอร์ติดต่อ','เจ็บป่วยฉุกเฉิน <b>1669</b> · สายด่วน ปภ. <b>1784</b> · เทศบาลเมืองพนัสนิคม <b>038-461-144</b>']);
  {const SA=D&&D.alert;if(SA&&SA.lv!=null&&['ok','watch','warn','crit'][SA.lv])lv=['ok','watch','warn','crit'][SA.lv]}   // ระดับจากเซิร์ฟเวอร์ (เกณฑ์เดียวกับ LINE/แอป)
   const L={ok:['ปกติ','--ok'],watch:['เฝ้าระวัง','--watch'],warn:['เตรียมพร้อม','--warn'],crit:['อันตราย น้ำท่วม','--crit']}[lv];
- el.innerHTML=`<div style="display:inline-block;background:var(${L[1]});color:#fff;font-weight:700;padding:4px 14px;border-radius:999px;margin-bottom:8px">${L[0]}</div>`+S.map(([h,t])=>`<div style="margin:4px 0;display:grid;grid-template-columns:minmax(110px,160px) 1fr;column-gap:10px"><b>${h}:</b><div>${t}</div></div>`).join('');
+ el.innerHTML=S.map(([h,t])=>`<div style="margin:4px 0;display:grid;grid-template-columns:minmax(110px,160px) 1fr;column-gap:10px"><b>${h}:</b><div>${t}</div></div>`).join('');
  const now=new Date();$('pubm').textContent='อัปเดต '+now.toLocaleString('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' น.';
- PUB_TXT=`สถานการณ์น้ำพนัสนิคม (${$('pubm').textContent}) — ${L[0]}\n`+S.map(([h,t])=>`• ${h}: ${t.replace(/<[^>]+>/g,'')}`).join('\n')+'\n(สรุปอัตโนมัติจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคม ไม่ใช่ประกาศทางราชการ)';
+ PUB_TXT=`สถานการณ์น้ำพนัสนิคม (${$('pubm').textContent})\n`+S.map(([h,t])=>`• ${h}: ${t.replace(/<[^>]+>/g,'')}`).join('\n')+'\n(สรุปอัตโนมัติจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคม ไม่ใช่ประกาศทางราชการ)';
  const b=$('pubCopy');if(b&&!b.onclick)b.onclick=async()=>{let ok=false;try{await navigator.clipboard.writeText(PUB_TXT);ok=true}catch(e){try{const ta=document.createElement('textarea');ta.value=PUB_TXT;document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}catch(e2){}}$('pubCopyMsg').textContent=ok?'คัดลอกแล้ว':'คัดลอกไม่สำเร็จ ลองเลือกข้อความเอง'}}
 function renderBB(){if(!$('bbPanel'))return;const L=bbLevel(),{b,s}=L;const r=getRes('บ้านบึง');
  const hd={ok:'น้ำจากบ้านบึงปกติ',watch:'เฝ้าระวังน้ำจากบ้านบึง',warn:'น้ำหลากจากบ้านบึงกำลังเข้าพนัสนิคม',crit:'น้ำหลากจากบ้านบึงปริมาณมาก'}[s];
