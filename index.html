@@ -1103,7 +1103,7 @@ function unlockSay(){getAC();if(!SS)return;pickV();if(sayUnlocked)return;sayUnlo
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#cbBox,#cbBtn'))unlockSay()},true);
 function sayClean(t){const L=[];t=String(t).replace(/(\d),(?=\d{3}(?!\d))/g,'$1');   // ตัดจุลภาคคั่นหลักพัน (15,748 → 15748) ไม่ให้ถูกตัดเป็นสองท่อนตอนอ่าน
  for(let l of String(t).split('\n')){l=l.trim();if(!l||/^(ดูรายละเอียด|ลิงก์สำรอง|แหล่งข้อมูลจากเว็บ|\(น้องหยดน้ำเป็น AI|\(สรุปอัตโนมัติ|\(ข้อมูลอัตโนมัติ)/.test(l))continue;
- l=l.replace(/https?:\/\/\S+/g,'').replace(/[\u{1F000}-\u{1FAFF}☀-➿️‍]/gu,'').replace(/[•]/g,'').replace(/·/g,',').replace(/→/g,'ไป').replace(/~/g,'ประมาณ ').trim();if(l)L.push(l)}
+ l=l.replace(/https?:\/\/\S+/g,'').replace(/[\u{1F000}-\u{1FAFF}☀-➿️‍]/gu,'').replace(/[•*]/g,'').replace(/·/g,',').replace(/→/g,'ไป').replace(/~/g,'ประมาณ ').trim();if(l)L.push(l)}
  let x=L.join(' ');for(const [a,b] of [['ล้าน ลบ.ม.','ล้านลูกบาศก์เมตร'],['ลบ.ม./วินาที','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม./วิ','ลูกบาศก์เมตรต่อวินาที'],['ลบ.ม.','ลูกบาศก์เมตร'],['มม./วัน','มิลลิเมตรต่อวัน'],['มม.','มิลลิเมตร'],['ซม.','เซนติเมตร'],['กม.','กิโลเมตร'],['ชม.','ชั่วโมง'],['/วัน','ต่อวัน'],['%',' เปอร์เซ็นต์'],['อ.','อำเภอ'],['จ.','จังหวัด']])x=x.split(a).join(b);
  return x.replace(/(^|[^ก-๙])ต\.(?=[ก-๙])/g,'$1ตำบล').replace(/\s+/g,' ').trim()}
 function sayOff(btn){if(btn){btn.classList.remove('on');btn.textContent='🔊'}}
