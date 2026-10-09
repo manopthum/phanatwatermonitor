@@ -399,7 +399,8 @@ function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','�
  const todo=lv==='crit'?['ตัดไฟ/ปิดเบรกเกอร์ในบ้านที่น้ำท่วมถึงปลั๊ก','ไม่เดิน ไม่ขับรถ ลุยน้ำที่ไหลแรงหรือไม่เห็นพื้นถนน','ดูแลผู้สูงอายุ เด็ก ผู้ป่วย ให้อยู่ที่สูงและปลอดภัย','ระวังสัตว์มีพิษและไฟฟ้ารั่วในน้ำ','ต้มน้ำก่อนดื่ม ล้างมือบ่อย ๆ ระวังโรคน้ำกัดเท้า']:lv==='warn'?['ย้ายของมีค่าและเอกสารสำคัญขึ้นที่สูง','ย้ายรถไปจอดที่สูง','เตรียมไฟฉาย ยา อาหาร น้ำดื่ม สำหรับ 3 วัน','ติดตามประกาศจากเทศบาลและอำเภอ']:['ติดตามข่าวสารเป็นระยะ','เตรียมของใช้จำเป็นไว้ให้พร้อม'];
  S.push(['ควรทำ',todo.join(' · ')]);
  S.push(['เบอร์ติดต่อ','เจ็บป่วยฉุกเฉิน <b>1669</b> · สายด่วน ปภ. <b>1784</b> · เทศบาลเมืองพนัสนิคม <b>038-461-144</b>']);
- const L={ok:['ปกติ','--ok'],watch:['เฝ้าระวัง','--watch'],warn:['เตรียมพร้อม','--warn'],crit:['อันตราย น้ำท่วม','--crit']}[lv];
+ {const SA=D&&D.alert;if(SA&&SA.lv!=null&&['ok','watch','warn','crit'][SA.lv])lv=['ok','watch','warn','crit'][SA.lv]}   // ระดับจากเซิร์ฟเวอร์ (เกณฑ์เดียวกับ LINE/แอป)
+  const L={ok:['ปกติ','--ok'],watch:['เฝ้าระวัง','--watch'],warn:['เตรียมพร้อม','--warn'],crit:['อันตราย น้ำท่วม','--crit']}[lv];
  el.innerHTML=`<div style="display:inline-block;background:var(${L[1]});color:#fff;font-weight:700;padding:4px 14px;border-radius:999px;margin-bottom:8px">${L[0]}</div>`+S.map(([h,t])=>`<div style="margin:4px 0;display:grid;grid-template-columns:minmax(110px,160px) 1fr;column-gap:10px"><b>${h}:</b><div>${t}</div></div>`).join('');
  const now=new Date();$('pubm').textContent='อัปเดต '+now.toLocaleString('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' น.';
  PUB_TXT=`สถานการณ์น้ำพนัสนิคม (${$('pubm').textContent}) — ${L[0]}\n`+S.map(([h,t])=>`• ${h}: ${t.replace(/<[^>]+>/g,'')}`).join('\n')+'\n(สรุปอัตโนมัติจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคม ไม่ใช่ประกาศทางราชการ)';
@@ -809,9 +810,9 @@ function render(){fixCap();
  if(bpOver.length)reasons.push(`ลุ่มน้ำบางปะกงล้นตลิ่ง ${bpOver.length} สถานี`);
  if(rmax&&rmax.r24>=35)reasons.push(`ฝน 24 ชม. สูงสุด ${fx(rmax.r24,0)} มม.`);
  if(f24>=10)reasons.push(`คาดฝนอีก ${fx(f24,0)} มม. ใน 24 ชม.`);
- const fo=fieldOn();if(fo)reasons.unshift(`รายงานจากพื้นที่ ${thTime(FIELD.t)}: น้ำท่วมในเขตเทศบาล ${fx(FIELD.dlo,1)}–${fx(FIELD.dhi,1)} ม.`);const lvB=fo?'crit':lv;
- const hd=fo?'น้ำท่วมในตัวเมืองพนัสนิคม':{ok:'สถานการณ์ปกติ',watch:'เฝ้าระวัง',warn:'เสี่ยงน้ำท่วมต่อเนื่อง',crit:'วิกฤต: น้ำล้นตลิ่ง/อ่างเต็ม'}[lv];
- $('banner').innerHTML=`<span class="lv s-${lvB}">${LBL[lvB]}</span><div class="hd">${hd}</div><div class="ds">${esc(reasons.join(' · ')||'ไม่มีตัวชี้วัดเกินเกณฑ์')}</div>`;try{bannerFlood()}catch(e){}
+ const fo=fieldOn();if(fo)reasons.unshift(`รายงานจากพื้นที่ ${thTime(FIELD.t)}: น้ำท่วมในเขตเทศบาล ${fx(FIELD.dlo,1)}–${fx(FIELD.dhi,1)} ม.`);const SA=D.alert,SL=SA&&SA.lv!=null?['ok','watch','warn','crit'][SA.lv]:null;if(SL&&!fo&&Array.isArray(SA.why)&&SA.why.length){reasons.length=0;SA.why.slice(0,3).forEach(w=>reasons.push(w))}const lvB=SL||(fo?'crit':lv);
+ const hd=fo?'น้ำท่วมในตัวเมืองพนัสนิคม':{ok:'สถานการณ์ปกติ',watch:'เฝ้าระวัง ติดตามสถานการณ์',warn:'เสี่ยงน้ำท่วม เตรียมพร้อม',crit:'อันตราย: น้ำท่วม/น้ำล้นตลิ่ง'}[lvB];
+ $('banner').innerHTML=`<span class="lv s-${lvB}">${{ok:'ปกติ',watch:'เฝ้าระวัง',warn:'เตรียมพร้อม',crit:'อันตราย น้ำท่วม'}[lvB]}</span><div class="hd">${hd}</div><div class="ds">${esc(reasons.join(' · ')||'ไม่มีตัวชี้วัดเกินเกณฑ์')}</div>`;try{bannerFlood()}catch(e){}
  // reservoirs
  const rs=[...(D.res||[])].sort((a,b)=>(a.r===b.r?0:a.r==='up'?-1:1)||b.pct-a.pct);
  $('res').innerHTML='<tr><th>อ่างเก็บน้ำ</th><th>บทบาท</th><th class="num">ปริมาณ</th><th style="min-width:130px">% ความจุ</th><th class="num">เข้า/วัน</th><th class="num">ระบาย/วัน</th><th>สถานะ</th></tr>'+rs.map(r=>{const s=resS(r.pct);const w=Math.min(r.pct||0,110)/110*100;
