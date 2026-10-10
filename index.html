@@ -1349,10 +1349,14 @@ async function load(){const src=[];
  src.push('data/alert.json?'+Date.now());
  for(const x of src){try{const r=await fetch(x,{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&j.id)return j}}catch(e){}}return null}
 let busy=false,tries=0;
+// ประกาศหมดอายุ: ใช้ a.exp จากเซิร์ฟเวอร์ (ไม่มี → 6 ชม. หลังประกาศ) · ปิด × แล้วไม่แสดงซ้ำ · เปิดจากแจ้งเตือนแล้วลบ ?alert= ออกจากลิงก์ (เปิดแอปใหม่ไม่เด้งซ้ำ)
+const AL_TTL=6*3600e3,expired=a=>Date.now()>(a.exp?Date.parse(a.exp):Date.parse(a.t||0)+AL_TTL),closed=a=>String(ls('pn-al-closed')||'')===String(a.id);
+if(qid){try{const u=new URL(location.href);u.searchParams.delete('alert');history.replaceState(history.state,'',u.pathname+(u.search||'')+u.hash)}catch(e){}}
 async function tick(first){if(busy)return;busy=true;try{const a=await load();if(!a)return;const age=Date.now()-Date.parse(a.t||0);
-  if(first&&qid){if(String(a.id)!==qid&&tries++<6){setTimeout(()=>tick(true),15000)}show(a);markSeen(a);return}   // เปิดจากแจ้งเตือน: แสดงประกาศ + ปุ่มฟัง
+  if(expired(a)){if(!box.hidden&&cur&&cur.id===a.id){stop();box.hidden=true}markSeen(a);return}   // หมดอายุแล้ว ไม่แสดง (และปิดกล่องที่ค้างอยู่)
+  if(first&&qid){if(String(a.id)!==qid&&tries++<6){setTimeout(()=>tick(true),15000)}if(!closed(a))show(a);markSeen(a);return}   // เปิดจากแจ้งเตือน: แสดงประกาศ + ปุ่มฟัง
   if(a.id<=seen)return;markSeen(a);
-  if(first&&!AUTO){if(age<6*3600e3)show(a);return}      // เปิดหน้าเว็บเอง: แสดงประกาศที่ยังใหม่ (ไม่เกิน 6 ชม.) ไม่อ่านเอง
+  if(first&&!AUTO){if(!closed(a))show(a);return}      // เปิดหน้าเว็บเอง: แสดงประกาศที่ยังไม่หมดอายุ ไม่อ่านเอง
   show(a);if(AUTO&&age<3*3600e3)autoPlay(a)}
  catch(e){}finally{busy=false}}
 async function wake(){try{if(AUTO&&!wl&&'wakeLock' in navigator&&document.visibilityState==='visible'){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}catch(e){}}
@@ -1366,7 +1370,7 @@ function setAuto(v){AUTO=v;ls('pn-al-voice',v?'1':'0');ui();LK.hidden=true;
 if(VB)VB.onclick=()=>setAuto(!AUTO);
 CHK.onchange=()=>setAuto(CHK.checked);
 SB.onclick=()=>{activated=true;if(SB.classList.contains('on')){stop();return}speak(cur)};
-document.getElementById('alX').onclick=()=>{stop();box.hidden=true};
+document.getElementById('alX').onclick=()=>{stop();box.hidden=true;if(cur)ls('pn-al-closed',String(cur.id))};
 // แตะครั้งแรกหลังโหลดหน้า = ปลดล็อกเสียง (เบราว์เซอร์บล็อกเสียงจนกว่าผู้ใช้จะแตะ)
 document.addEventListener('pointerdown',()=>{if(activated)return;activated=true;if(!AUTO)return;if(window.PNV)window.PNV.unlock();LK.hidden=true;wake();
  if(pending){const a=pending;pending=null;setTimeout(()=>{const w=chime();setTimeout(()=>speak(a),w)},300)}},true);
