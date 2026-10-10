@@ -304,7 +304,7 @@ const CAPFIX={'คลองหลวง รัชชโลทร':125}; // ค�
 function fixCap(){if(!D)return;let f=1;(D.res||[]).forEach(r=>{const c=CAPFIX[r.n];if(!c)return;if(r.cap!==c){r.cap0=r.cap;r.cap=c;r.pct=r.st/c*100}if(r.cap0)f=r.cap0/c});H.forEach(h=>{if(!h._c&&h.klr!=null){h.klr=h.klr*f;h._c=1}})}
 function bbData(){const b=D.bb||{};const rn=b.rn||(D.rn||[]).filter(x=>x.a==='บ้านบึง');return {rn,p72:b.p72,f24:b.f24,dy:b.dy||[]}}
 function bbLevel(){const b=bbData();const m=b.rn.length?Math.max(...b.rn.map(x=>+x.r24||0)):0;const p=b.p72||0;
- const s=(m>=90||p>=200)?'crit':(m>=50||p>=120)?'warn':(m>=20||p>=50)?'watch':'ok';return {b,m,p,s,now:b.rn.reduce((a,x)=>a+(+x.r1||0),0)}}
+ const x=(m>=90||p>=200);const s=(m>=50||p>=120)?'warn':(m>=20||p>=50)?'watch':'ok';return {b,m,p,s,x,now:b.rn.reduce((a,x)=>a+(+x.r1||0),0)}}   /* เกณฑ์เดียวกับเซิร์ฟเวอร์ (หมวด bb) ฝนตกแล้วเท่านั้น สูงสุด 'เตรียมพร้อม' · x = ฝนหนักมาก */
 function bbText(L){const {b,m,p,s,now}=L;const top=b.rn[0];let t=`ต้นน้ำบ้านบึง: ฝน 24 ชม. สูงสุด ${fx(m,1)} มม.${top?` (${top.n})`:''}${b.p72!=null?` ฝนสะสม 72 ชม. (แบบจำลอง) ${fx(p,0)} มม.`:''}`;
  if(s==='crit'||s==='warn')t+=now>=2?' ฝนยังตกต่อเนื่อง น้ำหลากจะไหลผ่านคลองป่าแดงและคลองหนองสรวงเข้าพนัสนิคมเพิ่มขึ้น คาดว่าถึงภายในราว 6–24 ชม. เฝ้าระวังพื้นที่ริมคลองทั้งสอง':' ฝนหยุดแล้ว แต่ดินอิ่มน้ำ น้ำจากคลองป่าแดงและคลองหนองสรวงน่าจะยังเข้าพนัสนิคมสูงสุดในราว 12–24 ชม. แล้วค่อยลด';
  else if(s==='watch')t+=' น้ำในคลองป่าแดงและคลองหนองสรวงอาจสูงขึ้นบ้าง ยังไม่ถึงระดับน่ากังวล';else t+=' ฝนต้นน้ำน้อย น้ำจากบ้านบึงไม่น่าเพิ่มขึ้น';
@@ -407,7 +407,7 @@ function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','�
  PUB_TXT=`สถานการณ์น้ำพนัสนิคม (${$('pubm').textContent})\n`+S.map(([h,t])=>`• ${h}: ${t.replace(/<[^>]+>/g,'')}`).join('\n')+'\n(สรุปอัตโนมัติจากศูนย์ติดตามสถานการณ์น้ำพนัสนิคม ไม่ใช่ประกาศทางราชการ)';
  const b=$('pubCopy');if(b&&!b.onclick)b.onclick=async()=>{let ok=false;try{await navigator.clipboard.writeText(PUB_TXT);ok=true}catch(e){try{const ta=document.createElement('textarea');ta.value=PUB_TXT;document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}catch(e2){}}$('pubCopyMsg').textContent=ok?'คัดลอกแล้ว':'คัดลอกไม่สำเร็จ ลองเลือกข้อความเอง'}}
 function renderBB(){if(!$('bbPanel'))return;const L=bbLevel(),{b,s}=L;const r=getRes('บ้านบึง');
- const hd={ok:'น้ำจากบ้านบึงปกติ',watch:'เฝ้าระวังน้ำจากบ้านบึง',warn:'น้ำหลากจากบ้านบึงกำลังเข้าพนัสนิคม',crit:'น้ำหลากจากบ้านบึงปริมาณมาก'}[s];
+ const hd=L.x?'น้ำหลากจากบ้านบึงปริมาณมาก เสี่ยงน้ำท่วมตัวเมือง':{ok:'น้ำจากบ้านบึงปกติ',watch:'เฝ้าระวังน้ำจากบ้านบึง',warn:'น้ำหลากจากบ้านบึงกำลังเข้าพนัสนิคม',crit:'น้ำหลากจากบ้านบึงปริมาณมาก'}[s];
  $('bbs').innerHTML=`<span class="lv s-${s}">${LBL[s]}</span><div class="hd">${hd}</div><div class="ds">${esc(bbText(L))}</div>`;
  const k=[];let rt='ไม่มีข้อมูล';if(r){const room=r.cap-r.st,net=(r.i||0)-(r.o||0);rt=`${fx(r.st,2)} / ${fx(r.cap,2)} ล้าน ลบ.ม. · `+(room<=0?'เต็มแล้ว น้ำล้นลงลำน้ำ':net>0?`เต็มในราว ${fx(room/net,1)} วัน`:'ยังรับน้ำได้');}
  k.push({s:rainS(L.m),l:'ฝน 24 ชม. สูงสุด (บ้านบึง)',v:fx(L.m,1),u:'มม.',n:b.rn[0]?`${b.rn[0].n}`:'ไม่มีข้อมูล'});
