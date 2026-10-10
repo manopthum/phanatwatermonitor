@@ -724,7 +724,8 @@ function flDrawReports(cx){if(!flShow.r)return 0;const its=[...((WARN&&WARN.item
   cx.strokeStyle='#6a1b9a';cx.lineWidth=2*s;cx.setLineDash([6*s,4*s]);cx.beginPath();
   for(const k of S){const [cX,cY]=k.split(',').map(Number);const X=cX*K,Y=cY*K;if(!S.has(cX+','+(cY-1))){cx.moveTo(X,Y);cx.lineTo(X+K,Y)}if(!S.has(cX+','+(cY+1))){cx.moveTo(X,Y+K);cx.lineTo(X+K,Y+K)}if(!S.has((cX-1)+','+cY)){cx.moveTo(X,Y);cx.lineTo(X,Y+K)}if(!S.has((cX+1)+','+cY)){cx.moveTo(X+K,Y);cx.lineTo(X+K,Y+K)}}
   cx.stroke();cx.setLineDash([])}}
- for(const x of lr){const [px,py]=flLL(+x.lat,+x.lon);cx.beginPath();cx.arc(px,py,7*U,0,Math.PI*2);cx.fillStyle=(+x.d||0)>0?'#6a1b9a':'#43a047';cx.fill();cx.lineWidth=2*U;cx.strokeStyle='#fff';cx.stroke();cx.font=`700 ${10.5*U}px system-ui,sans-serif`;cx.lineWidth=3*U;cx.strokeStyle='rgba(255,255,255,.9)';{const dd=+x.d||0;const lb=dd>0?`น้ำท่วม ~${Math.round(dd*100)} ซม.`:'ไม่ท่วม';cx.strokeText(lb,px+9*U,py+4*U);cx.fillStyle=dd>0?'#6a1b9a':'#2e7d32';cx.fillText(lb,px+9*U,py+4*U)}}
+ const UL=FLM.K/2/FLZL();   /* ป้ายจุดแจ้ง: ขยายตามการซูมแบบเดียวกับป้ายอื่นบนแผนที่ (เดิมเล็กคงที่) */
+ for(const x of lr){const U=UL;const [px,py]=flLL(+x.lat,+x.lon);cx.beginPath();cx.arc(px,py,7*U,0,Math.PI*2);cx.fillStyle=(+x.d||0)>0?'#6a1b9a':'#43a047';cx.fill();cx.lineWidth=2*U;cx.strokeStyle='#fff';cx.stroke();cx.font=`700 ${13*U}px system-ui,sans-serif`;cx.lineWidth=3.5*U;cx.strokeStyle='rgba(255,255,255,.9)';{const dd=+x.d||0;const lb=dd>0?`น้ำท่วม ~${Math.round(dd*100)} ซม.`:'ไม่ท่วม';cx.strokeText(lb,px+9*U,py+4*U);cx.fillStyle=dd>0?'#6a1b9a':'#2e7d32';cx.fillText(lb,px+9*U,py+4*U)}}
  cx.restore();return its.length+lr.length}
 let REPS=null,REP_LOCAL=[];
 // จุดที่ผู้ใช้เพิ่งแจ้งจากแชต: แสดงบนแผนที่ทันที จนกว่าข้อมูลจากเซิร์ฟเวอร์จะมีจุดนั้น
