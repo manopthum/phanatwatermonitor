@@ -935,12 +935,13 @@ sat();setInterval(sat,5*60000);
   const ts=[];for(let k=N-1;k>=0;k--)ts.push(new Date(end-k*step).toISOString().replace(/\.\d{3}Z$/,'Z'));
   let done=0;bar.hidden=false;const out=await Promise.all(ts.map(t=>new Promise(res=>{const im=new Image();im.onload=()=>{done++;prog.style.width=(done/N*100)+'%';res(im.naturalWidth>50?{t,im}:null)};im.onerror=()=>{done++;prog.style.width=(done/N*100)+'%';res(null)};im.src=GB+t})));
   F=out.filter(Boolean);bar.hidden=true}
- const cv=document.createElement('canvas');cv.width=560;cv.height=416;cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;display:none';img.parentNode.insertBefore(cv,img.nextSibling);const c2=cv.getContext('2d');
+ const cv=document.createElement('canvas');cv.width=560;cv.height=416;cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;display:none;pointer-events:none';img.parentNode.insertBefore(cv,img.nextSibling);const c2=cv.getContext('2d');
  function show(){if(!F.length)return;const f=F[i];cv.style.display='';c2.drawImage(f.im,0,0,cv.width,cv.height);cap.textContent=lab(f.t);prog.style.width=((i+1)/F.length*100)+'%';const isLast=i===F.length-1;i=(i+1)%F.length;tm=setTimeout(show,isLast?1800:450)}
  function stop(){on=false;clearTimeout(tm);btn.classList.remove('on');btn.textContent='▶ ภาพเคลื่อนไหว 3 ชม.';bar.hidden=true;cv.style.display='none';if(F.length)cap.textContent=lab(F[F.length-1].t)}
  async function play(){if(loading)return;loading=true;btn.textContent='⏳ กำลังโหลดภาพ…';try{await load()}catch(e){}loading=false;if(F.length<3){btn.textContent='โหลดภาพเคลื่อนไหวไม่สำเร็จ แตะเพื่อลองใหม่';return}
   on=true;btn.classList.add('on');btn.textContent='⏸ หยุด';bar.hidden=false;i=0;clearTimeout(tm);show()}
  btn.onclick=()=>{if(on){userStop=true;stop()}else{userStop=false;play()}};
+ window.__satAnim={frames:async()=>{if(!F.length&&!loading){try{await load()}catch(e){}}return F},label:lab};   // ให้หน้าดูเต็มจอใช้เฟรมชุดเดียวกัน
  try{new IntersectionObserver(es=>{for(const e of es){if(e.isIntersecting&&!on&&!userStop&&!loading){play()}else if(!e.isIntersecting&&on)stop()}},{threshold:0.4}).observe(img)}catch(e){}   // เล่นอัตโนมัติเมื่อเลื่อนมาถึงภาพ หยุดเมื่อเลื่อนผ่าน
 })();
 })();
@@ -1014,16 +1015,20 @@ sat();setInterval(sat,5*60000);
   tx=w<=vw?(vw-w)/2:Math.min(0,Math.max(vw-w,tx));ty=h<=vh?(vh-h)/2:Math.min(0,Math.max(vh-h,ty))}
  function fitView(){const vw=V.clientWidth,vh=V.clientHeight;fit=Math.min(vw/W,vh/H)*0.96;sc=fit;tx=(vw-W*sc)/2;ty=(vh-H*sc)/2;apply()}
  function zoomAt(f,cx,cy){const n=Math.min(Math.max(sc*f,fit),fit*12);const k=n/sc;tx=cx-(cx-tx)*k;ty=cy-(cy-ty)*k;sc=n;clamp();apply()}
- function show(k){figs=figsNow();if(!figs.length)return;i=(k+figs.length)%figs.length;const f=figs[i],im=f.querySelector('img');
+ let lbT=null;function lbStop(){clearTimeout(lbT);lbT=null}
+ async function lbAnim(f,im){lbStop();if(im.id!=='satH'||!window.__satAnim)return;const tk=Symbol();lbAnim.tk=tk;const Fs=await window.__satAnim.frames();if(lbAnim.tk!==tk||!L.classList.contains('on')||Fs.length<3)return;
+  const cv=document.createElement('canvas');cv.width=Fs[0].im.naturalWidth||560;cv.height=Fs[0].im.naturalHeight||416;cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none';const imgEl=S.querySelector('img');if(!imgEl)return;imgEl.after(cv);const c2=cv.getContext('2d');
+  const capB=C.querySelector('b');let j=0;const step=()=>{if(!L.classList.contains('on')||!cv.isConnected){lbStop();return}const fr=Fs[j];c2.drawImage(fr.im,0,0,cv.width,cv.height);if(capB)capB.textContent=window.__satAnim.label(fr.t);const isLast=j===Fs.length-1;j=(j+1)%Fs.length;lbT=setTimeout(step,isLast?1800:450)};step()}
+ function show(k){lbStop();figs=figsNow();if(!figs.length)return;i=(k+figs.length)%figs.length;const f=figs[i],im=f.querySelector('img');
   BB=bbOf(im);S.innerHTML='';const img=new Image();img.src=im.currentSrc||im.src;img.alt=im.alt||'';S.appendChild(img);
   const mk=f.querySelector('.satmk');if(mk&&mk.style.display!=='none'){const m=mk.cloneNode();m.removeAttribute('id');S.appendChild(m)}
   const cap=f.querySelector('figcaption');C.innerHTML=cap?cap.innerHTML:'';
   const go=()=>{W=img.naturalWidth||im.naturalWidth||560;H=img.naturalHeight||im.naturalHeight||416;img.style.width=W+'px';img.style.height=H+'px';S.style.width=W+'px';S.style.height=H+'px';fitView()};
-  if(img.complete&&img.naturalWidth)go();else img.onload=go;
+  if(img.complete&&img.naturalWidth)go();else img.onload=go;lbAnim(f,im);
   const multi=figs.length>1;document.getElementById('lbxP').style.display=document.getElementById('lbxX').style.display=multi?'':'none'}
  function open(k){L.classList.add('on');document.body.style.overflow='hidden';try{const p=L.requestFullscreen&&L.requestFullscreen();if(p&&p.catch)p.catch(()=>{})}catch(e){}show(k)}
  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&L.classList.contains('on'))setTimeout(()=>{if(W)fitView()},50)});
- function close(){L.classList.remove('on');document.body.style.overflow='';if(document.fullscreenElement===L&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}
+ function close(){lbStop();L.classList.remove('on');document.body.style.overflow='';if(document.fullscreenElement===L&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}
  function bind(){figsNow().forEach((f,k)=>{if(f.dataset.lb)return;f.dataset.lb=1;const im=f.querySelector('img');im.title='คลิกเพื่อดูเต็มจอ และซูมได้';
    im.addEventListener('click',()=>open(figsNow().indexOf(f)));const b=document.createElement('button');b.type='button';b.className='satz';b.textContent='⛶';b.title='ดูเต็มจอ';b.setAttribute('aria-label','ดูภาพเต็มจอ');b.onclick=e=>{e.stopPropagation();open(figsNow().indexOf(f))};f.appendChild(b)})}
  document.getElementById('lbxB').addEventListener('click',e=>{const a=e.target.dataset.a;const r=V.getBoundingClientRect();
