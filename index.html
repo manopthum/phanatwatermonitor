@@ -289,7 +289,8 @@ function trendFactors(){if(!D)return null;const F=[],now=Date.now(),wl=D.wl||[],
  let sc=0;const why=[];if(dT){sc+=dT;why.push(dT>0?'คลองหลวงสูงขึ้นเล็กน้อย':'คลองหลวงลดลง')}
  if(st!=null){if(KOx||(st>KL_MAX&&nt>0.01)){sc+=2;why.push('อ่างคลองหลวงมีน้ำล้นลงคลอง')}else if(nt<-0.01){sc-=1;why.push('อ่างคลองหลวงกำลังระบายน้ำลง')}}
  if(dB){sc+=dB;why.push(dB>0?'แม่น้ำบางปะกงสูงขึ้น':'แม่น้ำบางปะกงเริ่มลด')}
- const mx=Math.max(f24,bf24);if(mx>=10){sc+=mx>=35?2:1;why.push(mx>=35?'ฝนตกหนัก':'มีฝนตก')}if(fo)sc+=1;
+ let mx=Math.max(f24,bf24);if(mx>=10){sc+=mx>=35?2:1;why.push(mx>=35?'คาดฝนตกหนัก':'คาดมีฝนตก')}if(fo)sc+=1;
+ {const B=(D&&D.bb)||{};const bgm=Math.max(+B.gmax||0,...(B.rn||[]).map(r=>+r.r24||0)),bp=+B.p72||0;if(bgm>=20||bp>=50){sc+=(bgm>=50||bp>=120)?2:1;why.push(`ฝนต้นน้ำบ้านบึงตกแล้ว ~${Math.round(bgm)} มม. น้ำจะไหลเข้าเมืองใน 8–16 ชม.`)}mx=Math.max(mx,bgm)}   /* ฝนที่ตกแล้วที่บ้านบึง (ตรงกับเซิร์ฟเวอร์) */
  const S=['1–2 วันนี้น้ำน่าจะ'+(sc>=2?'สูงขึ้น':sc<=-2?'ค่อย ๆ ลดลง':'ทรงตัว')+(why.length?` (${why.join(', ')})`:'')];
  if(p4!=null&&p4>=100)S.push('แม่น้ำบางปะกงยังล้นตลิ่ง น้ำที่ท่วมขังจึงลดช้า');
  const wet=fd.filter(r=>r[1]>=15);if(wet.length){const w3=wet.slice(0,3),d0=w3[0][0],d1=w3[w3.length-1][0],lo=Math.min(...w3.map(r=>r[1])),hi=Math.max(...w3.map(r=>r[1]));const rng=(+d0.slice(3,5))+(d1!==d0?'–'+(+d1.slice(3,5)):'')+' '+TMs[+d0.slice(0,2)];S.push((mx<10?'ฝนช่วงนี้น้อย แต่':'')+`วันที่ ${rng} คาดฝนตกมากขึ้น (~${fx(lo,0)}${Math.round(lo)===Math.round(hi)?'':'–'+fx(hi,0)} มม./วัน) น้ำอาจกลับมาสูงขึ้น`)}
