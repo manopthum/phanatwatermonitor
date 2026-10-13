@@ -933,10 +933,11 @@ sat();setInterval(sat,5*60000);
  const lab=ts=>'Himawari-9 IR · '+th(ts)+(F.length&&ts===F[F.length-1].t?' (ล่าสุด)':' · ภาพเคลื่อนไหว');
  async function load(){const r=await fetch('data/sat.json?t='+Date.now());const m=r.ok?await r.json():{};const end=Date.parse(m.ht||'');if(!end)throw 0;if(m.ht===last&&F.length)return;last=m.ht;
   const ts=[];for(let k=N-1;k>=0;k--)ts.push(new Date(end-k*step).toISOString().replace(/\.\d{3}Z$/,'Z'));
-  let done=0;bar.hidden=false;const out=await Promise.all(ts.map(t=>new Promise(res=>{const im=new Image();im.onload=()=>{done++;prog.style.width=(done/N*100)+'%';res(im.naturalWidth>50?{t,src:im.src}:null)};im.onerror=()=>{done++;prog.style.width=(done/N*100)+'%';res(null)};im.src=GB+t})));
+  let done=0;bar.hidden=false;const out=await Promise.all(ts.map(t=>new Promise(res=>{const im=new Image();im.onload=()=>{done++;prog.style.width=(done/N*100)+'%';res(im.naturalWidth>50?{t,im}:null)};im.onerror=()=>{done++;prog.style.width=(done/N*100)+'%';res(null)};im.src=GB+t})));
   F=out.filter(Boolean);bar.hidden=true}
- function show(){if(!F.length)return;const f=F[i];img.src=f.src;cap.textContent=lab(f.t);prog.style.width=((i+1)/F.length*100)+'%';const isLast=i===F.length-1;i=(i+1)%F.length;tm=setTimeout(show,isLast?1800:450)}
- function stop(){on=false;clearTimeout(tm);btn.classList.remove('on');btn.textContent='▶ ภาพเคลื่อนไหว 3 ชม.';bar.hidden=true;if(F.length){img.src=F[F.length-1].src;cap.textContent=lab(F[F.length-1].t)}}
+ const cv=document.createElement('canvas');cv.width=560;cv.height=416;cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;display:none';img.parentNode.insertBefore(cv,img.nextSibling);const c2=cv.getContext('2d');
+ function show(){if(!F.length)return;const f=F[i];cv.style.display='';c2.drawImage(f.im,0,0,cv.width,cv.height);cap.textContent=lab(f.t);prog.style.width=((i+1)/F.length*100)+'%';const isLast=i===F.length-1;i=(i+1)%F.length;tm=setTimeout(show,isLast?1800:450)}
+ function stop(){on=false;clearTimeout(tm);btn.classList.remove('on');btn.textContent='▶ ภาพเคลื่อนไหว 3 ชม.';bar.hidden=true;cv.style.display='none';if(F.length)cap.textContent=lab(F[F.length-1].t)}
  async function play(){if(loading)return;loading=true;btn.textContent='⏳ กำลังโหลดภาพ…';try{await load()}catch(e){}loading=false;if(F.length<3){btn.textContent='โหลดภาพเคลื่อนไหวไม่สำเร็จ แตะเพื่อลองใหม่';return}
   on=true;btn.classList.add('on');btn.textContent='⏸ หยุด';bar.hidden=false;i=0;clearTimeout(tm);show()}
  btn.onclick=()=>{if(on){userStop=true;stop()}else{userStop=false;play()}};
