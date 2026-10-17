@@ -934,7 +934,12 @@ var u=document.getElementById('satU');if(u&&m.u)u.textContent='ดึงภา�
 function satRR(m){const rr=m&&m.rr;let e=document.getElementById('satRR');if(!rr||!rr.z){if(e)e.style.display='none';return}if(!e){e=document.createElement('div');e.id='satRR';e.style.cssText='margin:6px 0 8px;padding:8px 10px;border-radius:8px;font-size:14px;line-height:1.5';const ph=document.querySelector('#satPanel .ph');if(!ph)return;ph.after(e)}
  const age=(Date.now()-Date.parse(rr.t))/6e4;const Z=Object.entries(rr.z);const hit=age<=90&&Z.some(([n,v])=>v.c>=0.3&&v.r>=5);
  e.style.display='';e.style.background=hit?'rgba(230,81,0,.12)':'rgba(46,125,50,.08)';e.style.borderLeft='4px solid '+(hit?'#e65100':'#2e7d32');
- e.innerHTML='<b>'+(hit?'⚠️ ดาวเทียมพบกลุ่มเมฆฝนหนัก':'ประเมินฝนจากดาวเทียม')+'</b> (ภาพ '+th(rr.t)+(age>90?' · ข้อมูลเก่า':'')+')<br>'+Z.map(([n,v])=>`${n}: เมฆฝน ${Math.round(v.c*100)}% · ฝน ~${fx(v.r,1)} มม./ชม.`).join('<br>')+'<br><small>ประเมินจากอุณหภูมิยอดเมฆ ไม่ใช่ฝนวัดจริง</small>'}
+ e.innerHTML='<b>'+(hit?'⚠️ ดาวเทียมพบกลุ่มเมฆฝนหนัก':'ประเมินฝนจากดาวเทียม')+'</b> (ภาพ '+th(rr.t)+(age>90?' · ข้อมูลเก่า':'')+')<br>'+Z.map(([n,v])=>`${n}: เมฆฝน ${Math.round(v.c*100)}% · ฝน ~${fx(v.r,1)} มม./ชม.`).join('<br>')+satNC(m.nc)+'<br><small>ประเมินจากอุณหภูมิยอดเมฆ ไม่ใช่ฝนวัดจริง</small>'}
+/* คาดการณ์ 2 ชม. จากทิศทางกลุ่มเมฆ (sat.json nc) · ลูกศรชี้ทิศที่เมฆเคลื่อนไป */
+function satNC(nc){if(!nc||!nc.t||(Date.now()-Date.parse(nc.t))/6e4>120)return '';if(nc.spd==null)return '<br><b>คาดการณ์ 2 ชม.:</b> '+(nc.note||'คำนวณไม่ได้');
+ const ar=nc.frm?`<span style="display:inline-block;transform:rotate(${(nc.to||0)-90}deg);font-weight:700">➜</span> `:'';const mv=nc.frm?`เมฆฝนเคลื่อนจากทิศ${nc.frm} ~${nc.spd} กม./ชม.`:'เมฆฝนแทบไม่เคลื่อนที่';
+ const Z=Object.entries(nc.z||{}).map(([n,v])=>v.eta==null?`${n}: ไม่คาดว่าเมฆฝนหนักจะถึง`:v.eta<=0?`<b>${n}: มีเมฆฝนหนักอยู่แล้ว</b>`:`<b>${n}: คาดเมฆฝนหนักถึงใน ~${v.eta} นาที</b>`);
+ return '<br><b>คาดการณ์ 2 ชม. จากทิศทางเมฆ:</b> '+ar+mv+'<br>'+Z.join('<br>')}
 sat();setInterval(sat,5*60000);
 /* ภาพเคลื่อนไหวเมฆ Himawari-9 ย้อนหลัง 3 ชม. (ทุก 10 นาที) ดึงตรงจาก NASA GIBS — ไม่เพิ่มภาระเซิร์ฟเวอร์/GitHub */
 (function(){const GB='https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&SRS=EPSG:4326&FORMAT=image/jpeg&BBOX=99.5,12.0,103.0,14.6&WIDTH=560&HEIGHT=416&LAYERS=Himawari_AHI_Band13_Clean_Infrared,Coastlines_15m&TIME=';
