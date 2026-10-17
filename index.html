@@ -929,12 +929,20 @@ async function sat(){try{const r=await fetch('data/sat.json?t='+Date.now());if(!
 if(m.ht){document.getElementById('satH').src='data/sat_himawari.jpg?t='+encodeURIComponent(m.ht);document.getElementById('satHmk').style.display='';document.getElementById('satHt').textContent='Himawari-9 IR · '+th(m.ht)+' (ล่าสุด)';}
 if(m.md){document.getElementById('satM').src='data/sat_modis.jpg?t='+encodeURIComponent(m.md+m.ms);document.getElementById('satMmk').style.display='';document.getElementById('satMt').textContent='MODIS '+(m.ms||'')+' 7-2-1 · '+day(m.md)+' (ล่าสุด)';}
 var u=document.getElementById('satU');if(u&&m.u)u.textContent='ดึงภาพล่าสุด '+th(m.u)+' · NASA GIBS';
- satRR(m);}catch(e){}}
+ satRR(m);satArrow(m.nc);}catch(e){}}
+/* ลูกศรทิศทางกลุ่มเมฆบนภาพ Himawari: หางอยู่ที่ตำแหน่งเมฆเมื่อ 1 ชม. ก่อนถึงพนัสนิคม หัวชี้มาที่พนัสนิคม (ภาพ 99.5–103°E, 12–14.6°N · 160 px/องศา) */
+function satArrow(nc){const img=document.getElementById('satH');if(!img)return;const w=img.parentElement;let sv=document.getElementById('satArr');
+ if(!nc||nc.spd==null||!nc.frm||(Date.now()-Date.parse(nc.t))/6e4>120){if(sv)sv.style.display='none';return}
+ if(!sv){sv=document.createElementNS('http://www.w3.org/2000/svg','svg');sv.id='satArr';sv.setAttribute('viewBox','0 0 560 416');sv.setAttribute('preserveAspectRatio','none');sv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:6';w.appendChild(sv)}
+ sv.style.display='';const px=268.8,py=184,a=(nc.to||0)*Math.PI/180,L=Math.max(75,Math.min(160,nc.spd/111*160)),ux=Math.sin(a),uy=-Math.cos(a),tx=px-ux*L,ty=py-uy*L,hx=px-ux*10,hy=py-uy*10;
+ const hd=(s)=>{const bx=hx-ux*16,by=hy-uy*16;return `${hx},${hy} ${bx-uy*9},${by+ux*9} ${bx+uy*9},${by-ux*9}`};
+ sv.innerHTML=`<line x1="${tx}" y1="${ty}" x2="${hx-ux*12}" y2="${hy-uy*12}" stroke="#000" stroke-width="9" stroke-linecap="round"/><line x1="${tx}" y1="${ty}" x2="${hx-ux*12}" y2="${hy-uy*12}" stroke="#fff" stroke-width="5" stroke-linecap="round"/><polygon points="${hd()}" fill="#fff" stroke="#000" stroke-width="2.5"/>`+
+ `<g><rect x="8" y="8" rx="6" width="250" height="30" fill="rgba(0,0,0,.65)"/><text x="18" y="29" fill="#fff" font-size="16" font-family="sans-serif">เมฆฝนเคลื่อนจาก${nc.frm} ~${nc.spd} กม./ชม.</text></g>`}
 /* ประเมินฝนจากยอดเมฆ Himawari (เซิร์ฟเวอร์คำนวณทุก 20 นาที · เกณฑ์เดียวกับหมวด satrain: เมฆเย็น ≤−52°C ≥30% และฝนเฉลี่ย ≥5 มม./ชม.) */
 function satRR(m){const rr=m&&m.rr;let e=document.getElementById('satRR');if(!rr||!rr.z){if(e)e.style.display='none';return}if(!e){e=document.createElement('div');e.id='satRR';e.style.cssText='margin:6px 0 8px;padding:8px 10px;border-radius:8px;font-size:14px;line-height:1.5';const ph=document.querySelector('#satPanel .ph');if(!ph)return;ph.after(e)}
  const age=(Date.now()-Date.parse(rr.t))/6e4;const Z=Object.entries(rr.z);const hit=age<=90&&Z.some(([n,v])=>v.c>=0.3&&v.r>=5);
  e.style.display='';e.style.background=hit?'rgba(230,81,0,.12)':'rgba(46,125,50,.08)';e.style.borderLeft='4px solid '+(hit?'#e65100':'#2e7d32');
- e.innerHTML='<b>'+(hit?'⚠️ ดาวเทียมพบกลุ่มเมฆฝนหนัก':'ประเมินฝนจากดาวเทียม')+'</b> (ภาพ '+th(rr.t)+(age>90?' · ข้อมูลเก่า':'')+')<br>'+Z.map(([n,v])=>`${n}: เมฆฝน ${Math.round(v.c*100)}% · ฝน ~${fx(v.r,1)} มม./ชม.`).join('<br>')+satNC(m.nc)+'<br><small>ประเมินจากอุณหภูมิยอดเมฆ ไม่ใช่ฝนวัดจริง</small>'}
+ e.innerHTML='<b>'+(hit?'⚠️ ดาวเทียมพบกลุ่มเมฆฝนหนัก':'ประเมินฝนจากดาวเทียม')+'</b> (ภาพ '+th(rr.t)+(age>90?' · ข้อมูลเก่า':'')+')<br>'+Z.map(([n,v])=>`${n}: เมฆฝน ${Math.round(v.c*100)}% · ฝน ~${(+v.r||0).toFixed(1)} มม./ชม.`).join('<br>')+satNC(m.nc)+'<br><small>ประเมินจากอุณหภูมิยอดเมฆ ไม่ใช่ฝนวัดจริง</small>'}
 /* คาดการณ์ 2 ชม. จากทิศทางกลุ่มเมฆ (sat.json nc) · ลูกศรชี้ทิศที่เมฆเคลื่อนไป */
 function satNC(nc){if(!nc||!nc.t||(Date.now()-Date.parse(nc.t))/6e4>120)return '';if(nc.spd==null)return '<br><b>คาดการณ์ 2 ชม.:</b> '+(nc.note||'คำนวณไม่ได้');
  const ar=nc.frm?`<span style="display:inline-block;transform:rotate(${(nc.to||0)-90}deg);font-weight:700">➜</span> `:'';const mv=nc.frm?`เมฆฝนเคลื่อนจากทิศ${nc.frm} ~${nc.spd} กม./ชม.`:'เมฆฝนแทบไม่เคลื่อนที่';
