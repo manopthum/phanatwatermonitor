@@ -396,8 +396,8 @@ function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','�
  if(fo){up('crit');NOW.push(`ในตัวเมืองพนัสนิคม<b>น้ำท่วม</b> สูงประมาณ ${cm(FIELD.dlo)}–${cm(FIELD.dhi)} ซม. (${body(FIELD.dlo)}ถึง${body(FIELD.dhi).replace('ประมาณ','')}) ตามรายงานจากพื้นที่ ${thTime(FIELD.t)}`)}
  else{if(RT.n){up(RT.mx>=0.3?'warn':'watch');NOW.push(RT.txt)}
  if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>r.lv==='crit'||r.lv==='warn')){up('warn');{const ov=[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>(+r.pct||0)>=100);NOW.push('คลองในตัวเมือง (คลองเมือง ย่านตลาดเก่า–วัดเกาะแก้ว สะพานหน้าอำเภอ) '+(ov?'<b>คาดว่าน้ำเต็มตลิ่ง อาจล้น</b>เข้าถนนและบ้านเรือนริมคลองได้':'<b>น้ำเกือบเต็มตลิ่ง</b> อาจล้นเข้าถนนและบ้านเรือนริมคลองได้')+' (แบบจำลอง'+(RT.n?')':' ยังไม่มีรายงานน้ำท่วมจากพื้นที่)'))}}
- else{if(!RT.n)NOW.push('ไม่มีรายงานน้ำท่วมในตัวเมืองใน 24 ชม. ที่ผ่านมา');if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>(+r.pct||0)>=60))up('watch')}}
- {const st=nowSat();if(st){up('watch');NOW.push(st)}}
+ else{if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>(+r.pct||0)>=60))up('watch')}}
+ {const st=nowSat();if(!NOW.length)NOW.push(st?'ยังไม่มีรายงานน้ำท่วมในตัวเมือง':'<b>สถานการณ์ปกติ</b>');if(st){up('watch');NOW.push(st)}}   /* ไม่มีรายงาน/แบบจำลอง/ฝนดาวเทียม = สถานการณ์ปกติ (ตรงกับ LINE/น้องหยดน้ำ) */
  S.push(['ตอนนี้',NOW.join('<br>')]);
  // 2 trend
  const X=typeof klScen==='function'?klScen():null,m=X?X.sc[1]:null;const dam=m&&m.dmax;const KO=klObs();const KE=KO?tbmEst():null;if(KO)up(KE.pct>=100?'crit':KE.pct>=80?'warn':'watch');
