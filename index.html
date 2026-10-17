@@ -928,7 +928,13 @@ function day(d){try{return new Date(d+'T12:00:00+07:00').toLocaleDateString('th-
 async function sat(){try{const r=await fetch('data/sat.json?t='+Date.now());if(!r.ok)return;const m=await r.json();const v=Date.now();
 if(m.ht){document.getElementById('satH').src='data/sat_himawari.jpg?t='+encodeURIComponent(m.ht);document.getElementById('satHmk').style.display='';document.getElementById('satHt').textContent='Himawari-9 IR · '+th(m.ht)+' (ล่าสุด)';}
 if(m.md){document.getElementById('satM').src='data/sat_modis.jpg?t='+encodeURIComponent(m.md+m.ms);document.getElementById('satMmk').style.display='';document.getElementById('satMt').textContent='MODIS '+(m.ms||'')+' 7-2-1 · '+day(m.md)+' (ล่าสุด)';}
-var u=document.getElementById('satU');if(u&&m.u)u.textContent='ดึงภาพล่าสุด '+th(m.u)+' · NASA GIBS';}catch(e){}}
+var u=document.getElementById('satU');if(u&&m.u)u.textContent='ดึงภาพล่าสุด '+th(m.u)+' · NASA GIBS';
+ satRR(m);}catch(e){}}
+/* ประเมินฝนจากยอดเมฆ Himawari (เซิร์ฟเวอร์คำนวณทุก 20 นาที · เกณฑ์เดียวกับหมวด satrain: เมฆเย็น ≤−52°C ≥30% และฝนเฉลี่ย ≥5 มม./ชม.) */
+function satRR(m){const rr=m&&m.rr;let e=document.getElementById('satRR');if(!rr||!rr.z){if(e)e.style.display='none';return}if(!e){e=document.createElement('div');e.id='satRR';e.style.cssText='margin:6px 0 8px;padding:8px 10px;border-radius:8px;font-size:14px;line-height:1.5';const ph=document.querySelector('#satPanel .ph');if(!ph)return;ph.after(e)}
+ const age=(Date.now()-Date.parse(rr.t))/6e4;const Z=Object.entries(rr.z);const hit=age<=90&&Z.some(([n,v])=>v.c>=0.3&&v.r>=5);
+ e.style.display='';e.style.background=hit?'rgba(230,81,0,.12)':'rgba(46,125,50,.08)';e.style.borderLeft='4px solid '+(hit?'#e65100':'#2e7d32');
+ e.innerHTML='<b>'+(hit?'⚠️ ดาวเทียมพบกลุ่มเมฆฝนหนัก':'ประเมินฝนจากดาวเทียม')+'</b> (ภาพ '+th(rr.t)+(age>90?' · ข้อมูลเก่า':'')+')<br>'+Z.map(([n,v])=>`${n}: เมฆฝน ${Math.round(v.c*100)}% · ฝน ~${fx(v.r,1)} มม./ชม.`).join('<br>')+'<br><small>ประเมินจากอุณหภูมิยอดเมฆ ไม่ใช่ฝนวัดจริง</small>'}
 sat();setInterval(sat,5*60000);
 /* ภาพเคลื่อนไหวเมฆ Himawari-9 ย้อนหลัง 3 ชม. (ทุก 10 นาที) ดึงตรงจาก NASA GIBS — ไม่เพิ่มภาระเซิร์ฟเวอร์/GitHub */
 (function(){const GB='https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&SRS=EPSG:4326&FORMAT=image/jpeg&BBOX=99.5,12.0,103.0,14.6&WIDTH=560&HEIGHT=416&LAYERS=Himawari_AHI_Band13_Clean_Infrared,Coastlines_15m&TIME=';
