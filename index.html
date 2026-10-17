@@ -375,15 +375,30 @@ function renderAnalysis(){try{renderPublic()}catch(e){console.error(e)}const el=
  {const Xk=klScen();const dam=Xk&&Xk.sc[1].dmax;const A=[];{const a=bbAlert();if(a&&(a.lv==='warn'||a.lv==='crit'))A.push('ฝนบ้านบึงเกินเกณฑ์ เตรียมรับน้ำในตัวเมือง นามะตูม และกุฎโง้ง ภายใน 8–16 ชม.')}if(dam)A.push('ติดตามการระบายน้ำของอ่างรัชชโลทรอย่างใกล้ชิด',`เตรียมรับน้ำเพิ่มราว ${dMD(dam)}`);{const kr=getRes('คลองหลวง รัชชโลทร');if(!dam&&kr&&kr.st>(kr.cap||125))A.push('ติดตามการระบายน้ำของอ่างรัชชโลทรที่ยังเกินความจุ')}{const ft=(FLTBR||[]).filter(r=>r.lv==='flood');if(ft.length)A.push(`พื้นที่น้ำท่วม (${ft.map(r=>'ต.'+r.n).join(', ')}) ระวังน้ำขังและถนนต่ำ เลี่ยงการสัญจรผ่านจุดน้ำท่วม`)}if(fo||twBad||dam)A.push('ชุมชนริมคลองหลวง ย่านตลาดเก่า และที่ลุ่มทางเหนือกับตะวันตกของเมือง ยังไม่ควรย้ายของลงจากที่สูง');if(fo)A.push('ระวังไฟฟ้ารั่วและน้ำไหลแรงตามถนนต่ำ');if(!A.length)A.push('ติดตามสถานการณ์ต่อเนื่อง');P.push([dam||fo?'warn':'ok','ข้อเสนอ',A.join(' · ')])}
  el.innerHTML=P.map(([s,h,t])=>`<li><i style="background:var(${cvx[s]})"></i><span style="white-space:pre-line"><b>${h}:</b> ${esc(t)}</span></li>`).join('')+`<li><i style="background:transparent"></i><span style="font-size:12px;color:var(--ink2)">ข้อ 3–5 เป็นค่าคาดการณ์จากแบบจำลอง · สรุปอัตโนมัติ อัปเดตทุกชั่วโมง (ล่าสุด ${new Date().toLocaleTimeString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'})} น.)</span></li>`}
 let PUB_TXT='';
+/* บรรทัด "ตอนนี้" (17 ต.ค. 69): จุดแจ้งน้ำท่วมจากประชาชนในเขตเทศบาล (รัศมี 2 กม. จากใจกลางเมือง ภายใน 12 ชม.) + ฝนจากดาวเทียม */
+function nowReps(){const R=(typeof REPS!=='undefined'&&Array.isArray(REPS))?REPS:[];const now=Date.now();const k=(la,lo)=>Math.hypot((lo-101.1806)*108.3,(la-13.4515)*110.6);
+ const T=R.filter(x=>x&&x.lat&&x.lon&&(+x.d||0)>=0.05&&(now-Date.parse(x.t))/36e5<=12&&k(+x.lat,+x.lon)<=2);if(!T.length)return {n:0};
+ const ds=T.map(x=>+x.d),lo=Math.min(...ds),hi=Math.max(...ds),last=T.reduce((a,x)=>Date.parse(x.t)>Date.parse(a.t)?x:a);const cm=v=>Math.round(v*100);
+ return {n:T.length,mx:hi,txt:`มีผู้แจ้ง<b>น้ำท่วมในเขตเทศบาล ${T.length} จุด</b> ลึก ~${cm(lo)===cm(hi)?cm(hi):cm(lo)+'–'+cm(hi)} ซม. (แจ้งล่าสุด ${new Date(last.t).toLocaleTimeString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'})} น. · แจ้งจากประชาชน ยังไม่ได้ยืนยัน)`}}
+function nowSat(){const m=window.__SATM;if(!m)return '';const rr=m.rr||{},nc=m.nc||{},z=rr.z||{},hit=v=>v&&v.c>=0.3&&v.r>=5;const fresh=t=>t&&(Date.now()-Date.parse(t))/6e4<=90;const T=[];
+ if(fresh(rr.t)){if(hit(z['พนัสนิคม']))T.push(`ขณะนี้มี<b>กลุ่มเมฆฝนหนักปกคลุมพนัสนิคม</b> (~${Math.round(z['พนัสนิคม'].c*100)}%) ฝนอาจตกหนัก ระวังน้ำรอการระบายตามถนนต่ำ`);
+  if(hit(z['ต้นน้ำบ้านบึง']))T.push('มีกลุ่มเมฆฝนหนักเหนือ<b>ต้นน้ำบ้านบึง</b> น้ำในคลองป่าแดง/หนองสรวงอาจเพิ่มขึ้นใน 8–16 ชม.')}
+ if(fresh(nc.t)&&nc.z){const p=nc.z['พนัสนิคม'];if(p&&p.eta!=null&&p.eta>0&&p.eta<=60)T.push(`คาดว่า<b>กลุ่มเมฆฝนหนักจะถึงพนัสนิคมใน ~${p.eta} นาที</b>`)}
+ return T.length?T.join('<br>')+' <span style="opacity:.75">(จากภาพดาวเทียม)</span>':''}
+window.__rp=()=>{try{renderPublic()}catch(e){}};window.__setReps=r=>{REPS=r};   /* ให้สคริปต์แผงดาวเทียม (คนละ scope) สั่งวาดการ์ดใหม่ */
 function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
  const dMD=s=>{const [m,d]=String(s).split('-').map(Number);return m&&d?`${d} ${TM[m]}`:s};const hm=ms=>{const t=new Date(ms+7*3600e3);return `${t.getUTCDate()} ${TM[t.getUTCMonth()+1]} เวลาประมาณ ${String(t.getUTCHours()).padStart(2,'0')}:${String(t.getUTCMinutes()).padStart(2,'0')} น.`};
  const body=d=>d<0.1?'แห้งหรือเกือบแห้ง':d<0.3?'ประมาณข้อเท้า':d<0.5?'ประมาณหน้าแข้ง':d<0.8?'ประมาณเข่า':d<1.1?'ประมาณเอว':'สูงกว่าเอว';
  const cm=v=>Math.round(v*100/5)*5;const S=[];let lv='ok';const up=l=>{const R={ok:0,watch:1,warn:2,crit:3};if(R[l]>R[lv])lv=l};
  // 1 now
  const fo=fieldOn(),c=fo?fieldFc():null;
- if(fo){up('crit');S.push(['ตอนนี้',`ในตัวเมืองพนัสนิคม<b>น้ำท่วม</b> สูงประมาณ ${cm(FIELD.dlo)}–${cm(FIELD.dhi)} ซม. (${body(FIELD.dlo)}ถึง${body(FIELD.dhi).replace('ประมาณ','')}) ตามรายงานจากพื้นที่ ${thTime(FIELD.t)}`])}
- else if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>r.lv==='crit'||r.lv==='warn')){up('warn');{const ov=[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>(+r.pct||0)>=100);S.push(['ตอนนี้','คลองในตัวเมือง (คลองเมือง ย่านตลาดเก่า–วัดเกาะแก้ว สะพานหน้าอำเภอ) '+(ov?'<b>คาดว่าน้ำเต็มตลิ่ง อาจล้น</b>เข้าถนนและบ้านเรือนริมคลองได้':'<b>น้ำเกือบเต็มตลิ่ง</b> อาจล้นเข้าถนนและบ้านเรือนริมคลองได้')+' (แบบจำลอง ยังไม่มีรายงานน้ำท่วมจากพื้นที่)'])}}
- else{S.push(['ตอนนี้','ไม่มีรายงานน้ำท่วมในตัวเมืองใน 24 ชม. ที่ผ่านมา']);if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>(+r.pct||0)>=60))up('watch')}
+ const NOW=[],RT=nowReps();
+ if(fo){up('crit');NOW.push(`ในตัวเมืองพนัสนิคม<b>น้ำท่วม</b> สูงประมาณ ${cm(FIELD.dlo)}–${cm(FIELD.dhi)} ซม. (${body(FIELD.dlo)}ถึง${body(FIELD.dhi).replace('ประมาณ','')}) ตามรายงานจากพื้นที่ ${thTime(FIELD.t)}`)}
+ else{if(RT.n){up(RT.mx>=0.3?'warn':'watch');NOW.push(RT.txt)}
+ if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>r.lv==='crit'||r.lv==='warn')){up('warn');{const ov=[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>(+r.pct||0)>=100);NOW.push('คลองในตัวเมือง (คลองเมือง ย่านตลาดเก่า–วัดเกาะแก้ว สะพานหน้าอำเภอ) '+(ov?'<b>คาดว่าน้ำเต็มตลิ่ง อาจล้น</b>เข้าถนนและบ้านเรือนริมคลองได้':'<b>น้ำเกือบเต็มตลิ่ง</b> อาจล้นเข้าถนนและบ้านเรือนริมคลองได้')+' (แบบจำลอง'+(RT.n?')':' ยังไม่มีรายงานน้ำท่วมจากพื้นที่)'))}}
+ else{if(!RT.n)NOW.push('ไม่มีรายงานน้ำท่วมในตัวเมืองใน 24 ชม. ที่ผ่านมา');if(TWR&&[TWR[4],TWR[1],TWR[2]].filter(Boolean).some(r=>(+r.pct||0)>=60))up('watch')}}
+ {const st=nowSat();if(st){up('watch');NOW.push(st)}}
+ S.push(['ตอนนี้',NOW.join('<br>')]);
  // 2 trend
  const X=typeof klScen==='function'?klScen():null,m=X?X.sc[1]:null;const dam=m&&m.dmax;const KO=klObs();const KE=KO?tbmEst():null;if(KO)up(KE.pct>=100?'crit':KE.pct>=80?'warn':'watch');
  if(fo&&c){if(c.rising){S.push(['สถานการณ์หลัก','<b>น้ำยังเพิ่มขึ้น</b> ขอให้เตรียมพร้อมย้ายของขึ้นที่สูง'])}else{S.push(['สถานการณ์หลัก',`น้ำ<b>กำลังค่อย ๆ ลด</b> แต่ลดช้า คาดว่าอีก 12 ชม. จะเหลือ${body((c.lo12+c.hi12)/2)} และน่าจะลดจนเกือบแห้งราว ${hm(c.tEnd)}`+(KO?` <b>อย่างไรก็ตาม</b> อ่างเก็บน้ำคลองหลวง (รัชชโลทร) น้ำล้นสปิลเวย์แล้ว (รายงานจากพื้นที่ ${thTime(KO.t)}) ทำให้น้ำลดช้ากว่านี้หรือกลับมาสูงขึ้นได้`:dam?` <b>อย่างไรก็ตาม</b> อ่างเก็บน้ำคลองหลวง (รัชชโลทร) ใกล้เต็ม อาจมีน้ำล้นอ่างลงคลองหลวงราววันที่ ${dMD(m.dmax)} ทำให้น้ำลดช้ากว่านี้หรือกลับมาสูงขึ้นได้`:'')])}}
@@ -929,7 +944,7 @@ async function sat(){try{const r=await fetch('data/sat.json?t='+Date.now());if(!
 if(m.ht){document.getElementById('satH').src='data/sat_himawari.jpg?t='+encodeURIComponent(m.ht);document.getElementById('satHmk').style.display='';document.getElementById('satHt').textContent='Himawari-9 IR · '+th(m.ht)+' (ล่าสุด)';}
 if(m.md){document.getElementById('satM').src='data/sat_modis.jpg?t='+encodeURIComponent(m.md+m.ms);document.getElementById('satMmk').style.display='';document.getElementById('satMt').textContent='MODIS '+(m.ms||'')+' 7-2-1 · '+day(m.md)+' (ล่าสุด)';}
 var u=document.getElementById('satU');if(u&&m.u)u.textContent='ดึงภาพล่าสุด '+th(m.u)+' · NASA GIBS';
- satRR(m);satArrow(m.nc);}catch(e){}}
+ satRR(m);satArrow(m.nc);window.__SATM=m;if(window.__rp)window.__rp();}catch(e){}}
 /* ลูกศรทิศทางกลุ่มเมฆบนภาพ Himawari: หางอยู่ที่ตำแหน่งเมฆเมื่อ 1 ชม. ก่อนถึงพนัสนิคม หัวชี้มาที่พนัสนิคม (ภาพ 99.5–103°E, 12–14.6°N · 160 px/องศา) */
 function satArrow(nc){const img=document.getElementById('satH');if(!img)return;const w=img.parentElement;let sv=document.getElementById('satArr');
  const rel=nc&&((nc.near||0)>=3||Object.values(nc.z||{}).some(v=>v.eta!=null));   /* แสดงเฉพาะเมื่อมีเมฆฝนในรัศมี 50 กม. หรือคาดว่าเมฆฝนหนักจะถึงพื้นที่ใน 2 ชม. */
