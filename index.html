@@ -947,7 +947,7 @@ var u=document.getElementById('satU');if(u&&m.u)u.textContent='ดึงภา�
  satRR(m);satArrow(m.nc);window.__SATM=m;if(window.__rp)window.__rp();}catch(e){}}
 /* ลูกศรทิศทางกลุ่มเมฆบนภาพ Himawari: หางอยู่ที่ตำแหน่งเมฆเมื่อ 1 ชม. ก่อนถึงพนัสนิคม หัวชี้มาที่พนัสนิคม (ภาพ 99.5–103°E, 12–14.6°N · 160 px/องศา) */
 function satArrow(nc){const img=document.getElementById('satH');if(!img)return;const w=img.parentElement;let sv=document.getElementById('satArr');
- const rel=nc&&((nc.near||0)>=3||Object.values(nc.z||{}).some(v=>v.eta!=null));   /* แสดงเฉพาะเมื่อมีเมฆฝนในรัศมี 50 กม. หรือคาดว่าเมฆฝนหนักจะถึงพื้นที่ใน 2 ชม. */
+ const rel=nc&&((nc.near||0)>=12||Object.values(nc.z||{}).some(v=>v.eta!=null));   /* แสดงเฉพาะเมื่อมีเมฆฝนในรัศมี 50 กม. หรือคาดว่าเมฆฝนหนักจะถึงพื้นที่ใน 2 ชม. */
  if(!nc||nc.spd==null||!nc.frm||!rel||(Date.now()-Date.parse(nc.t))/6e4>120){if(sv)sv.style.display='none';return}
  if(!sv){sv=document.createElementNS('http://www.w3.org/2000/svg','svg');sv.id='satArr';sv.setAttribute('viewBox','0 0 560 416');sv.setAttribute('preserveAspectRatio','none');sv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;opacity:.9'}
  /* วางใต้ชั้นชื่อสถานที่ (svg.satg) ให้ชื่ออำเภอ/อ่างอยู่บนลูกศร */ const g=w.querySelector('svg.satg');if(g){if(sv.nextSibling!==g)w.insertBefore(sv,g)}else if(sv.parentElement!==w)w.appendChild(sv)
