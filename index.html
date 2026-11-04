@@ -382,10 +382,10 @@ function nowReps(){const R=(typeof REPS!=='undefined'&&Array.isArray(REPS))?REPS
  const ds=T.map(x=>+x.d),lo=Math.min(...ds),hi=Math.max(...ds),last=T.reduce((a,x)=>Date.parse(x.t)>Date.parse(a.t)?x:a);const cm=v=>Math.round(v*100);
  return {n:T.length,mx:hi,txt:`มีผู้แจ้ง<b>น้ำท่วมในเขตเทศบาล ${T.length} จุด</b> ลึก ~${cm(lo)===cm(hi)?cm(hi):cm(lo)+'–'+cm(hi)} ซม. (แจ้งล่าสุด ${new Date(last.t).toLocaleTimeString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'})} น. · แจ้งจากประชาชน ยังไม่ได้ยืนยัน)`}}
 function nowSat(){const m=window.__SATM;if(!m)return '';const rr=m.rr||{},nc=m.nc||{},z=rr.z||{},hit=v=>v&&v.c>=0.3&&v.r>=5;const fresh=t=>t&&(Date.now()-Date.parse(t))/6e4<=90;const T=[];
- if(fresh(rr.t)){if(hit(z['พนัสนิคม']))T.push(`ขณะนี้มี<b>กลุ่มเมฆฝนหนักปกคลุมพนัสนิคม</b> (~${Math.round(z['พนัสนิคม'].c*100)}%) ฝนอาจตกหนัก ระวังน้ำรอการระบายตามถนนต่ำ`);
+ if(fresh(rr.t)){if(hit(z['พนัสนิคม']))T.push(`ขณะนี้มี<b>${rr.src==='radar'?'ฝนตกหนักครอบคลุมพนัสนิคม':'กลุ่มเมฆฝนหนักปกคลุมพนัสนิคม'}</b> (~${Math.round(z['พนัสนิคม'].c*100)}%) ฝนอาจตกหนัก ระวังน้ำรอการระบายตามถนนต่ำ`);
   if(hit(z['ต้นน้ำบ้านบึง']))T.push('มีกลุ่มเมฆฝนหนักเหนือ<b>ต้นน้ำบ้านบึง</b> น้ำในคลองป่าแดง/หนองสรวงอาจเพิ่มขึ้นใน 8–16 ชม.')}
  if(fresh(nc.t)&&nc.z){const p=nc.z['พนัสนิคม'];if(p&&p.eta!=null&&p.eta>0&&p.eta<=60)T.push(`คาดว่า<b>กลุ่มเมฆฝนหนักจะถึงพนัสนิคมใน ~${p.eta} นาที</b>`)}
- return T.length?T.join('<br>')+' <span style="opacity:.75">(จากภาพดาวเทียม)</span>':''}
+ return T.length?T.join('<br>')+' <span style="opacity:.75">('+(rr.src==='radar'?'จากเรดาร์กรมอุตุนิยมวิทยา':'จากภาพดาวเทียม')+')</span>':''}
 window.__rp=()=>{try{renderPublic()}catch(e){}};window.__setReps=r=>{REPS=r};   /* ให้สคริปต์แผงดาวเทียม (คนละ scope) สั่งวาดการ์ดใหม่ */
 function renderPublic(){const el=$('pubBody');if(!el||!D)return;const TM=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
  const dMD=s=>{const [m,d]=String(s).split('-').map(Number);return m&&d?`${d} ${TM[m]}`:s};const hm=ms=>{const t=new Date(ms+7*3600e3);return `${t.getUTCDate()} ${TM[t.getUTCMonth()+1]} เวลาประมาณ ${String(t.getUTCHours()).padStart(2,'0')}:${String(t.getUTCMinutes()).padStart(2,'0')} น.`};
@@ -964,7 +964,8 @@ function satArrow(nc){const img=document.getElementById('satH');if(!img)return;c
 function satRR(m){const rr=m&&m.rr;let e=document.getElementById('satRR');if(!rr||!rr.z){if(e)e.style.display='none';return}if(!e){e=document.createElement('div');e.id='satRR';e.style.cssText='margin:6px 0 8px;padding:8px 10px;border-radius:8px;font-size:14px;line-height:1.5';const ph=document.querySelector('#satPanel .ph');if(!ph)return;ph.after(e)}
  const age=(Date.now()-Date.parse(rr.t))/6e4;const Z=Object.entries(rr.z);const hit=age<=90&&Z.some(([n,v])=>v.c>=0.3&&v.r>=5);
  e.style.display='';e.style.background=hit?'rgba(230,81,0,.12)':'rgba(46,125,50,.08)';e.style.borderLeft='4px solid '+(hit?'#e65100':'#2e7d32');
- e.innerHTML='<b>'+(hit?'⚠️ ดาวเทียมพบกลุ่มเมฆฝนหนัก':'ประเมินฝนจากดาวเทียม')+'</b> (ภาพ '+th(rr.t)+(age>90?' · ข้อมูลเก่า':'')+')<br>'+Z.map(([n,v])=>`${n}: เมฆฝน ${Math.round(v.c*100)}% · ฝน ~${(+v.r||0).toFixed(1)} มม./ชม.`).join('<br>')+satNC(m.nc)+'<br><small>ประเมินจากอุณหภูมิยอดเมฆ ไม่ใช่ฝนวัดจริง</small>'}
+ const RD=rr.src==='radar';   /* 4 พ.ย. 69: เรดาร์ TMD ระยองเป็นหลัก ไม่มีภาพใหม่ใช้ดาวเทียม */
+ e.innerHTML='<b>'+(hit?(RD?'⚠️ เรดาร์พบฝนตกหนัก':'⚠️ ดาวเทียมพบกลุ่มเมฆฝนหนัก'):(RD?'ประเมินฝนจากเรดาร์ กรมอุตุนิยมวิทยา':'ประเมินฝนจากดาวเทียม'))+'</b> ('+(RD?'ดึงภาพ ':'ภาพ ')+th(rr.t)+(age>90?' · ข้อมูลเก่า':'')+')<br>'+Z.map(([n,v])=>RD?`${n}: ฝน ≥5 มม./ชม. ${Math.round(v.c*100)}% ของพื้นที่ · เฉลี่ย ~${(+v.r||0).toFixed(1)} มม./ชม.${v.mx!=null?' · สูงสุด '+v.mx+' dBZ':''}`:`${n}: เมฆฝน ${Math.round(v.c*100)}% · ฝน ~${(+v.r||0).toFixed(1)} มม./ชม.`).join('<br>')+satNC(m.nc)+'<br><small>'+(RD?'ประเมินจากความแรงสัญญาณเรดาร์ (CMAX) ด้วยสูตร Marshall–Palmer · ทิศทางเมฆยังคำนวณจากดาวเทียม':'ประเมินจากอุณหภูมิยอดเมฆ ไม่ใช่ฝนวัดจริง')+'</small>'}
 /* คาดการณ์ 2 ชม. จากทิศทางกลุ่มเมฆ (sat.json nc) · ลูกศรชี้ทิศที่เมฆเคลื่อนไป */
 function satNC(nc){if(!nc||!nc.t||(Date.now()-Date.parse(nc.t))/6e4>120)return '';if(nc.spd==null)return '<br><b>คาดการณ์ 2 ชม.:</b> '+(nc.note||'คำนวณไม่ได้');
  const ar=nc.frm?`<span style="display:inline-block;transform:rotate(${(nc.to||0)-90}deg);font-weight:700">➜</span> `:'';const mv=nc.frm?`เมฆฝนเคลื่อนจากทิศ${nc.frm} ~${nc.spd} กม./ชม.`:'เมฆฝนแทบไม่เคลื่อนที่';
